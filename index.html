@@ -10,7 +10,7 @@
             --bg: #F5F5F7;
             --text-primary: #1E3A5F;
             --accent: #4A9B9B;
-            --warning: #D97757; /* Muted amber for overflow state */
+            --warning: #D97757;
             --border-strict: 1px solid #1E3A5F;
             --font-sans: 'Inter', sans-serif;
             --font-mono: 'Roboto Mono', monospace;
@@ -212,7 +212,6 @@
         let activeState = '';
         let isZenMode = false;
         
-        // Timer variables
         let targetSeconds = 0;
         let elapsedSeconds = 0;
         let isOverflowing = false;
@@ -256,7 +255,12 @@
                 document.body.classList.remove('work-mode');
             }
 
-            appendLog(`Started: ${modeName} -> ${task}`);
+            // Only log task target if it's a new chain, otherwise just log the mode
+            if (task !== 'Unspecified target') {
+                appendLog(`Started: ${modeName} -> ${task}`);
+            } else {
+                appendLog(`Started: ${modeName}`);
+            }
 
             if (hideTime) {
                 const display = document.getElementById('timer');
@@ -285,8 +289,17 @@
                     display.innerText = formatDuration(remaining);
                 } else if (remaining === 0) {
                     display.innerText = "00:00";
+                    
+                    // AUTO-TRANSITION LOGIC FOR PRIMING PHASES
+                    if (activeState === 'DMN Reset' || activeState === 'Meditation') {
+                        clearInterval(intervalTracker);
+                        appendLog(`Priming complete. Auto-initiating Work sequence.`, 'system');
+                        startStandardTimer('Work', 1500); // Trigger 25-minute Work Block
+                        return;
+                    }
+
                 } else {
-                    // OVERFLOW LOGIC
+                    // OVERFLOW LOGIC FOR WORK AND RECOVERY PHASES
                     if (!isOverflowing) {
                         isOverflowing = true;
                         appendLog(`Target duration reached. Overflow tracking initiated.`, 'warning');
@@ -323,7 +336,6 @@
                 const s = elapsedSeconds % 60;
                 appendLog(`Concluded: Zen Mode (Duration: ${m}m ${s}s)`);
                 
-                // Calculate 1:5 ratio rest
                 pendingRecoverySeconds = Math.floor(elapsedSeconds / 5);
                 const r_m = Math.floor(pendingRecoverySeconds / 60);
                 const r_s = pendingRecoverySeconds % 60;
@@ -331,7 +343,6 @@
                 appendLog(`Calculation: Required recovery period is ${r_m}m ${r_s}s.`, 'system');
                 
             } else {
-                // Log standard timer completion, checking for overflow
                 if (isOverflowing) {
                     const over_m = Math.floor(Math.abs(targetSeconds - elapsedSeconds) / 60);
                     const over_s = Math.abs(targetSeconds - elapsedSeconds) % 60;
@@ -353,7 +364,6 @@
             document.getElementById('stop-btn').style.display = 'none';
             document.body.classList.remove('work-mode');
             
-            // Show the dynamic recovery button only if coming out of Zen mode with accumulated rest
             if (isZenMode && pendingRecoverySeconds > 0) {
                 const btn = document.getElementById('dynamic-recovery-btn');
                 const m = Math.floor(pendingRecoverySeconds / 60);
