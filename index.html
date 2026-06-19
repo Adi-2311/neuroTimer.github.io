@@ -23,6 +23,7 @@
         body.work-mode button { border-color: #F5F5F7; color: #F5F5F7; }
         body.work-mode button:hover { background-color: #F5F5F7; color: #000000; }
         body.work-mode input, body.work-mode .event-log { border-color: #333; }
+        body.work-mode .log-entry { border-bottom-color: rgba(245, 245, 247, 0.3); }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -82,11 +83,25 @@
             margin: 2rem 0;
             letter-spacing: -0.05em;
             font-variant-numeric: tabular-nums;
+            height: 120px; /* Prevents layout jump when text changes */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Pulsing animation for hidden Zen Mode timer */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        .pulse-text {
+            animation: pulse 2s infinite ease-in-out;
         }
 
         .controls {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr); /* Changed to 2x2 grid for 4 buttons */
             gap: 1rem;
         }
 
@@ -134,9 +149,12 @@
             margin-bottom: 0.5rem;
             padding-bottom: 0.5rem;
             border-bottom: 1px dotted rgba(30, 58, 95, 0.3);
+            word-wrap: break-word;
         }
 
-        .log-time { color: var(--accent); }
+        .log-time { color: var(--accent); margin-right: 0.5rem;}
+        
+        .sys-msg { color: var(--accent); font-weight: 500; }
 
         @media (max-width: 768px) {
             .terminal-container { grid-template-columns: 1fr; }
@@ -157,12 +175,13 @@
             <div class="timer-display mono" id="timer">00:00</div>
             
             <div class="controls" id="primary-controls">
-                <button onclick="startTimer('DMN Reset', 600)">DMN Reset (10m)</button>
-                <button onclick="startTimer('Meditation', 300)">Meditate (5m)</button>
-                <button onclick="startTimer('Work', 1500)">Work (25m)</button>
+                <button onclick="startStandardTimer('DMN Reset', 600)">DMN Reset (10m)</button>
+                <button onclick="startStandardTimer('Meditation', 300)">Meditate (5m)</button>
+                <button onclick="startStandardTimer('Work', 1500)">Work (25m)</button>
+                <button onclick="startZenMode()">Zen Mode (∞)</button>
             </div>
             
-            <button class="btn-stop" id="stop-btn" onclick="stopTimer()">Conclude Current Block</button>
+            <button class="btn-stop" id="stop-btn" onclick="stopCurrentBlock()">Conclude Current Block</button>
         </div>
 
         <!-- UTILITY LOG -->
@@ -180,70 +199,115 @@
     </div>
 
     <script>
-        let countdown;
-        let activeMode = '';
+        let intervalTracker;
+        let activeState = '';
+        let isZenMode = false;
+        let elapsedZenSeconds = 0;
 
         function formatTime() {
             const now = new Date();
             return `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}]`;
         }
 
-        function appendLog(message) {
+        function appendLog(message, isSystem = false) {
             const logBox = document.getElementById('event-log');
             const entry = document.createElement('div');
             entry.className = 'log-entry';
-            entry.innerHTML = `<span class="log-time">${formatTime()}</span> ${message}`;
-            logBox.prepend(entry);
+            const sysClass = isSystem ? 'sys-msg' : '';
+            entry.innerHTML = `<span class="log-time">${formatTime()}</span> <span class="${sysClass}">${message}</span>`;
+            logBox.prepend(entry); // Prepends so the newest log is at the top
         }
 
-        function startTimer(mode, seconds) {
-            clearInterval(countdown);
-            activeMode = mode;
+        function triggerUIMode(modeName, hideTime = false) {
+            const task = document.getElementById('task-input').value || 'Unspecified target';
+            document.getElementById('status-label').innerText = `${modeName.toUpperCase()} ACTIVE`;
             
-            const task = document.getElementById('task-input').value || 'Unspecified task';
-            document.getElementById('status-label').innerText = `${mode.toUpperCase()} ACTIVE`;
-            
-            // UI Toggles
             document.getElementById('primary-controls').style.display = 'none';
             document.getElementById('stop-btn').style.display = 'block';
 
-            if (mode === 'Work') {
+            if (modeName === 'Work' || modeName === 'Zen Mode') {
                 document.body.classList.add('work-mode');
             } else {
                 document.body.classList.remove('work-mode');
             }
 
-            appendLog(`Started: ${mode} - ${task}`);
+            appendLog(`Started: ${modeName} -> ${task}`);
 
-            const display = document.getElementById('timer');
+            if (hideTime) {
+                const display = document.getElementById('timer');
+                display.innerText = "[ - - - ]";
+                display.classList.add('pulse-text');
+            }
+        }
+
+        function startStandardTimer(mode, seconds) {
+            clearInterval(intervalTracker);
+            activeState = mode;
+            isZenMode = false;
             
-            countdown = setInterval(() => {
-                const minutes = Math.floor(seconds / 60);
-                const remainderSeconds = seconds % 60;
-                display.innerText = `${minutes < 10 ? '0' : ''}${minutes}:${remainderSeconds < 10 ? '0' : ''}${remainderSeconds}`;
+            triggerUIMode(mode, false);
+            const display = document.getElementById('timer');
+            display.classList.remove('pulse-text');
+            
+            intervalTracker = setInterval(() => {
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                display.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
                 
                 if (seconds <= 0) {
-                    clearInterval(countdown);
+                    clearInterval(intervalTracker);
                     appendLog(`Completed: ${mode}`);
-                    stopTimer(); // Auto-reset UI
+                    resetUI();
                 }
                 seconds--;
             }, 1000);
         }
 
-        function stopTimer() {
-            clearInterval(countdown);
+        function startZenMode() {
+            clearInterval(intervalTracker);
+            activeState = 'Zen Mode';
+            isZenMode = true;
+            elapsedZenSeconds = 0;
+            
+            triggerUIMode('Zen Mode', true);
+
+            intervalTracker = setInterval(() => {
+                elapsedZenSeconds++;
+            }, 1000);
+        }
+
+        function stopCurrentBlock() {
+            clearInterval(intervalTracker);
+
+            if (isZenMode) {
+                const m = Math.floor(elapsedZenSeconds / 60);
+                const s = elapsedZenSeconds % 60;
+                appendLog(`Concluded: Zen Mode (Duration: ${m}m ${s}s)`);
+                
+                // Calculate rest ratio (1:5 rule. 5 mins work = 1 min rest)
+                const restRequiredSeconds = Math.floor(elapsedZenSeconds / 5);
+                const r_m = Math.floor(restRequiredSeconds / 60);
+                const r_s = restRequiredSeconds % 60;
+                
+                appendLog(`Calculation: Required recovery period is ${r_m}m ${r_s}s.`, true);
+            } else {
+                appendLog(`Interrupted: ${activeState}`);
+            }
+
+            resetUI();
+        }
+
+        function resetUI() {
             document.getElementById('timer').innerText = "00:00";
+            document.getElementById('timer').classList.remove('pulse-text');
             document.getElementById('status-label').innerText = "IDLE";
             
             document.getElementById('primary-controls').style.display = 'grid';
             document.getElementById('stop-btn').style.display = 'none';
             document.body.classList.remove('work-mode');
             
-            if (activeMode) {
-                appendLog(`Concluded: ${activeMode}`);
-                activeMode = '';
-            }
+            activeState = '';
+            isZenMode = false;
         }
     </script>
 </body>
