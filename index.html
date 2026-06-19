@@ -3,40 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cognitive Protocol Engine</title>
+    <title>Focus Terminal</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #F5F5F7; /* Soft gray */
-            --text-primary: #1E3A5F; /* Deep blue */
-            --accent: #4A9B9B; /* Muted teal */
+            --bg: #F5F5F7;
+            --text-primary: #1E3A5F;
+            --accent: #4A9B9B;
             --border-strict: 1px solid #1E3A5F;
             --font-sans: 'Inter', sans-serif;
             --font-mono: 'Roboto Mono', monospace;
         }
 
-        /* OLED Mode Overrides for Phase 3 */
-        body.oled-mode {
+        body.work-mode {
             background-color: #000000;
             color: #F5F5F7;
         }
-        body.oled-mode .container {
-            border-color: #333;
-        }
-        body.oled-mode button {
-            border-color: #F5F5F7;
-            color: #F5F5F7;
-        }
-        body.oled-mode button:hover {
-            background-color: #F5F5F7;
-            color: #000000;
-        }
+        body.work-mode .terminal-container { border-color: #333; }
+        body.work-mode button { border-color: #F5F5F7; color: #F5F5F7; }
+        body.work-mode button:hover { background-color: #F5F5F7; color: #000000; }
+        body.work-mode input, body.work-mode .event-log { border-color: #333; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: var(--font-sans);
@@ -51,25 +39,30 @@
             padding: 1rem;
         }
 
-        .container {
+        .terminal-container {
             width: 100%;
-            max-width: 600px;
+            max-width: 800px;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
             padding: 2rem;
             border: var(--border-strict);
             background: transparent;
         }
 
-        h1, h2, h3 {
-            font-weight: 500;
-            letter-spacing: -0.02em;
-            margin-bottom: 1rem;
+        .main-panel { display: flex; flex-direction: column; }
+
+        h1 {
+            font-size: 1rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            border-bottom: var(--border-strict);
+            padding-bottom: 0.5rem;
         }
 
-        .mono {
-            font-family: var(--font-mono);
-        }
+        .mono { font-family: var(--font-mono); }
 
-        /* Forms & Inputs */
         input[type="text"] {
             width: 100%;
             padding: 0.75rem;
@@ -78,28 +71,36 @@
             background: transparent;
             border: var(--border-strict);
             color: inherit;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             outline: none;
         }
-        
-        input[type="text"]:focus {
-            border-color: var(--accent);
+
+        .timer-display {
+            font-size: 5rem;
+            font-weight: 400;
+            text-align: center;
+            margin: 2rem 0;
+            letter-spacing: -0.05em;
+            font-variant-numeric: tabular-nums;
         }
 
-        /* Buttons */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
         button {
-            width: 100%;
             padding: 0.75rem;
             font-family: var(--font-sans);
-            font-size: 1rem;
+            font-size: 0.85rem;
             font-weight: 500;
             background: transparent;
             border: var(--border-strict);
             color: inherit;
             cursor: pointer;
-            transition: background-color 0.15s ease, color 0.15s ease;
+            transition: all 0.15s ease;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
         }
 
         button:hover {
@@ -107,173 +108,113 @@
             color: var(--bg);
         }
 
-        button.accent-btn:hover {
-            background-color: var(--accent);
-            border-color: var(--accent);
-            color: #ffffff;
+        .btn-stop {
+            grid-column: 1 / -1;
+            margin-top: 1rem;
+            display: none;
         }
 
-        /* Protocol Cards */
-        .protocol-card {
-            border: var(--border-strict);
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            transition: border-color 0.15s ease;
-        }
-
-        .protocol-card:hover {
-            border-color: var(--accent);
-        }
-
-        .protocol-header {
+        /* Sidebar Log */
+        .side-panel {
+            border-left: var(--border-strict);
+            padding-left: 2rem;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-            border-bottom: 1px solid rgba(30, 58, 95, 0.2);
-            padding-bottom: 0.5rem;
+            flex-direction: column;
         }
 
-        .protocol-title {
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-        }
-
-        .protocol-time {
+        .event-log {
+            flex-grow: 1;
             font-family: var(--font-mono);
-            color: var(--accent);
+            font-size: 0.75rem;
+            overflow-y: auto;
+            max-height: 400px;
         }
 
-        .methodology {
-            font-size: 0.85rem;
+        .log-entry {
             margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px dotted rgba(30, 58, 95, 0.3);
         }
 
-        .mechanism {
-            font-size: 0.85rem;
-            color: #555; /* Slightly muted text for depth */
+        .log-time { color: var(--accent); }
+
+        @media (max-width: 768px) {
+            .terminal-container { grid-template-columns: 1fr; }
+            .side-panel { border-left: none; border-top: var(--border-strict); padding-left: 0; padding-top: 2rem; margin-top: 2rem; }
         }
-
-        /* Phase Visibility */
-        .phase { display: none; }
-        .phase.active { display: block; }
-
-        /* Timer Display */
-        .timer-display {
-            font-size: 4rem;
-            font-weight: 400;
-            text-align: center;
-            margin: 3rem 0;
-            letter-spacing: -0.05em;
-        }
-
-        .nav-link {
-            display: block;
-            text-align: center;
-            margin-top: 2rem;
-            font-size: 0.85rem;
-            color: inherit;
-            text-decoration: underline;
-            text-transform: uppercase;
-        }
-
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- PHASE 1: Objective Anchor -->
-        <div id="phase-1" class="phase active">
-            <h2>Phase I: Parameter Definition</h2>
-            <p class="methodology" style="margin-bottom: 1.5rem;">Declare the cognitive target for the upcoming block. Specificity reduces task friction.</p>
-            <input type="text" id="objective-input" placeholder="e.g., Complete calculus problem set 4...">
-            <button onclick="advanceToPhase(2)">Lock Parameters</button>
-            <a href="stats.html" class="nav-link">View Session Data Analytics</a>
-        </div>
-
-        <!-- PHASE 2: Priming Protocol -->
-        <div id="phase-2" class="phase">
-            <h2>Phase II: Priming Selection</h2>
-            <p class="methodology" style="margin-bottom: 1.5rem;">Select an intervention to calibrate baseline neurochemistry prior to execution.</p>
-
-            <div class="protocol-card" onclick="startProtocol('DMN Reset', 600)">
-                <div class="protocol-header">
-                    <span class="protocol-title">Protocol A: DMN Reset</span>
-                    <span class="protocol-time">10:00</span>
-                </div>
-                <div class="methodology"><strong>Method:</strong> Unstructured visual fixation (stimulus deprivation).</div>
-                <div class="mechanism"><strong>Mechanism:</strong> Lowers baseline dopamine threshold; increases relative salience of subsequent cognitive tasks.</div>
-            </div>
-
-            <div class="protocol-card" onclick="startProtocol('Attentional Calibration', 300)">
-                <div class="protocol-header">
-                    <span class="protocol-title">Protocol B: Attentional Calibration</span>
-                    <span class="protocol-time">05:00</span>
-                </div>
-                <div class="methodology"><strong>Method:</strong> Focused-attention meditation (anchored to respiration).</div>
-                <div class="mechanism"><strong>Mechanism:</strong> Engages anterior cingulate cortex (ACC) to improve sustained attention.</div>
-            </div>
-
-            <div class="protocol-card" onclick="startProtocol('Direct Override', 0)">
-                <div class="protocol-header">
-                    <span class="protocol-title">Protocol C: Direct Execution</span>
-                    <span class="protocol-time">00:00</span>
-                </div>
-                <div class="methodology"><strong>Method:</strong> Immediate task commencement.</div>
-                <div class="mechanism"><strong>Mechanism:</strong> Bypass priming protocols. Recommended only if flow state is already active.</div>
+    <div class="terminal-container">
+        
+        <!-- MAIN CONTROLS -->
+        <div class="main-panel">
+            <h1>Active Task</h1>
+            <input type="text" id="task-input" placeholder="Enter task (e.g., Read Chapter 4)">
+            
+            <div id="status-label" class="mono" style="text-align: center; font-size: 0.85rem; color: var(--accent);">IDLE</div>
+            <div class="timer-display mono" id="timer">00:00</div>
+            
+            <div class="controls" id="primary-controls">
+                <button onclick="startTimer('DMN Reset', 600)">DMN Reset (10m)</button>
+                <button onclick="startTimer('Meditation', 300)">Meditate (5m)</button>
+                <button onclick="startTimer('Work', 1500)">Work (25m)</button>
             </div>
             
-            <button style="margin-top: 1rem; border-color: transparent;" onclick="advanceToPhase(1)">← Re-define Parameters</button>
+            <button class="btn-stop" id="stop-btn" onclick="stopTimer()">Conclude Current Block</button>
         </div>
 
-        <!-- PHASE 3: Execution / Flow -->
-        <div id="phase-3" class="phase">
-            <h3 class="mono" style="text-align: center; font-size: 0.9rem; text-transform: uppercase; color: #888;">Active Objective</h3>
-            <p id="display-objective" style="text-align: center; font-size: 1.25rem; font-weight: 500; margin-bottom: 1rem;"></p>
-            
-            <div id="active-state-label" class="mono" style="text-align: center; font-size: 0.85rem; color: var(--accent);">PRIMING SEQUENCE RUNNING</div>
-            
-            <div class="timer-display mono" id="timer">10:00</div>
-            
-            <button class="accent-btn" onclick="concludePhase()">Conclude Phase</button>
+        <!-- UTILITY LOG -->
+        <div class="side-panel">
+            <h1>Session Log</h1>
+            <div class="event-log" id="event-log">
+                <!-- Logs injected here -->
+                <div class="log-entry">
+                    <span class="log-time">[System]</span> Terminal initialized.
+                </div>
+            </div>
+            <a href="stats.html" class="mono" style="font-size: 0.75rem; text-decoration: none; color: inherit; margin-top: 1rem; border: var(--border-strict); padding: 0.5rem; text-align: center;">View Full Stats &rarr;</a>
         </div>
+
     </div>
 
     <script>
         let countdown;
+        let activeMode = '';
 
-        function advanceToPhase(phaseNum) {
-            document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
-            document.getElementById(`phase-${phaseNum}`).classList.add('active');
-            
-            if(phaseNum !== 3) {
-                document.body.classList.remove('oled-mode');
-            }
+        function formatTime() {
+            const now = new Date();
+            return `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}]`;
         }
 
-        function startProtocol(name, seconds) {
-            const objective = document.getElementById('objective-input').value || "Undisclosed objective";
-            document.getElementById('display-objective').innerText = objective;
-            
-            advanceToPhase(3);
-            
-            if (seconds === 0) {
-                // Direct Execution (OLED black, no timer shown just work state)
-                document.body.classList.add('oled-mode');
-                document.getElementById('active-state-label').innerText = "COGNITIVE BLOCK: ACTIVE";
-                document.getElementById('timer').innerText = "FLOW";
-            } else {
-                // Priming Phase (Timer running)
-                document.body.classList.remove('oled-mode'); // Keep clinical gray for priming
-                document.getElementById('active-state-label').innerText = `PROTOCOL: ${name.toUpperCase()}`;
-                runTimer(seconds);
-            }
+        function appendLog(message) {
+            const logBox = document.getElementById('event-log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">${formatTime()}</span> ${message}`;
+            logBox.prepend(entry);
         }
 
-        function runTimer(seconds) {
+        function startTimer(mode, seconds) {
             clearInterval(countdown);
+            activeMode = mode;
+            
+            const task = document.getElementById('task-input').value || 'Unspecified task';
+            document.getElementById('status-label').innerText = `${mode.toUpperCase()} ACTIVE`;
+            
+            // UI Toggles
+            document.getElementById('primary-controls').style.display = 'none';
+            document.getElementById('stop-btn').style.display = 'block';
+
+            if (mode === 'Work') {
+                document.body.classList.add('work-mode');
+            } else {
+                document.body.classList.remove('work-mode');
+            }
+
+            appendLog(`Started: ${mode} - ${task}`);
+
             const display = document.getElementById('timer');
             
             countdown = setInterval(() => {
@@ -283,19 +224,26 @@
                 
                 if (seconds <= 0) {
                     clearInterval(countdown);
-                    // Automatically transition to Work state (OLED black) when priming is done
-                    document.body.classList.add('oled-mode');
-                    document.getElementById('active-state-label').innerText = "COGNITIVE BLOCK: ACTIVE";
-                    display.innerText = "FLOW";
+                    appendLog(`Completed: ${mode}`);
+                    stopTimer(); // Auto-reset UI
                 }
                 seconds--;
             }, 1000);
         }
 
-        function concludePhase() {
+        function stopTimer() {
             clearInterval(countdown);
-            document.getElementById('objective-input').value = '';
-            advanceToPhase(1);
+            document.getElementById('timer').innerText = "00:00";
+            document.getElementById('status-label').innerText = "IDLE";
+            
+            document.getElementById('primary-controls').style.display = 'grid';
+            document.getElementById('stop-btn').style.display = 'none';
+            document.body.classList.remove('work-mode');
+            
+            if (activeMode) {
+                appendLog(`Concluded: ${activeMode}`);
+                activeMode = '';
+            }
         }
     </script>
 </body>
