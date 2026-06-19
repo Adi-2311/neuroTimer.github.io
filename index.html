@@ -10,6 +10,7 @@
             --bg: #F5F5F7;
             --text-primary: #1E3A5F;
             --accent: #4A9B9B;
+            --warning: #D97757; /* Muted amber for overflow state */
             --border-strict: 1px solid #1E3A5F;
             --font-sans: 'Inter', sans-serif;
             --font-mono: 'Roboto Mono', monospace;
@@ -83,25 +84,27 @@
             margin: 2rem 0;
             letter-spacing: -0.05em;
             font-variant-numeric: tabular-nums;
-            height: 120px; /* Prevents layout jump when text changes */
+            height: 120px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: color 0.3s ease;
         }
 
-        /* Pulsing animation for hidden Zen Mode timer */
+        .timer-display.overflow {
+            color: var(--warning);
+        }
+
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.3; }
             100% { opacity: 1; }
         }
-        .pulse-text {
-            animation: pulse 2s infinite ease-in-out;
-        }
+        .pulse-text { animation: pulse 2s infinite ease-in-out; }
 
         .controls {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Changed to 2x2 grid for 4 buttons */
+            grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
         }
 
@@ -126,6 +129,12 @@
         .btn-stop {
             grid-column: 1 / -1;
             margin-top: 1rem;
+            display: none;
+        }
+        
+        .btn-dynamic {
+            grid-column: 1 / -1;
+            border-style: dashed;
             display: none;
         }
 
@@ -153,8 +162,8 @@
         }
 
         .log-time { color: var(--accent); margin-right: 0.5rem;}
-        
         .sys-msg { color: var(--accent); font-weight: 500; }
+        .warn-msg { color: var(--warning); font-weight: 500; }
 
         @media (max-width: 768px) {
             .terminal-container { grid-template-columns: 1fr; }
@@ -179,6 +188,7 @@
                 <button onclick="startStandardTimer('Meditation', 300)">Meditate (5m)</button>
                 <button onclick="startStandardTimer('Work', 1500)">Work (25m)</button>
                 <button onclick="startZenMode()">Zen Mode (∞)</button>
+                <button id="dynamic-recovery-btn" class="btn-dynamic" onclick="startCalculatedRecovery()">Initiate Calculated Recovery</button>
             </div>
             
             <button class="btn-stop" id="stop-btn" onclick="stopCurrentBlock()">Conclude Current Block</button>
@@ -188,7 +198,6 @@
         <div class="side-panel">
             <h1>Session Log</h1>
             <div class="event-log" id="event-log">
-                <!-- Logs injected here -->
                 <div class="log-entry">
                     <span class="log-time">[System]</span> Terminal initialized.
                 </div>
@@ -202,20 +211,35 @@
         let intervalTracker;
         let activeState = '';
         let isZenMode = false;
-        let elapsedZenSeconds = 0;
+        
+        // Timer variables
+        let targetSeconds = 0;
+        let elapsedSeconds = 0;
+        let isOverflowing = false;
+        let pendingRecoverySeconds = 0;
 
         function formatTime() {
             const now = new Date();
             return `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}]`;
         }
+        
+        function formatDuration(totalSeconds) {
+            const m = Math.floor(Math.abs(totalSeconds) / 60);
+            const s = Math.abs(totalSeconds) % 60;
+            return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+        }
 
-        function appendLog(message, isSystem = false) {
+        function appendLog(message, type = 'normal') {
             const logBox = document.getElementById('event-log');
             const entry = document.createElement('div');
             entry.className = 'log-entry';
-            const sysClass = isSystem ? 'sys-msg' : '';
-            entry.innerHTML = `<span class="log-time">${formatTime()}</span> <span class="${sysClass}">${message}</span>`;
-            logBox.prepend(entry); // Prepends so the newest log is at the top
+            
+            let msgClass = '';
+            if (type === 'system') msgClass = 'sys-msg';
+            if (type === 'warning') msgClass = 'warn-msg';
+            
+            entry.innerHTML = `<span class="log-time">${formatTime()}</span> <span class="${msgClass}">${message}</span>`;
+            logBox.prepend(entry);
         }
 
         function triggerUIMode(modeName, hideTime = false) {
@@ -223,6 +247,7 @@
             document.getElementById('status-label').innerText = `${modeName.toUpperCase()} ACTIVE`;
             
             document.getElementById('primary-controls').style.display = 'none';
+            document.getElementById('dynamic-recovery-btn').style.display = 'none';
             document.getElementById('stop-btn').style.display = 'block';
 
             if (modeName === 'Work' || modeName === 'Zen Mode') {
@@ -244,22 +269,32 @@
             clearInterval(intervalTracker);
             activeState = mode;
             isZenMode = false;
+            targetSeconds = seconds;
+            elapsedSeconds = 0;
+            isOverflowing = false;
             
             triggerUIMode(mode, false);
             const display = document.getElementById('timer');
-            display.classList.remove('pulse-text');
+            display.classList.remove('pulse-text', 'overflow');
             
             intervalTracker = setInterval(() => {
-                const m = Math.floor(seconds / 60);
-                const s = seconds % 60;
-                display.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+                elapsedSeconds++;
+                const remaining = targetSeconds - elapsedSeconds;
                 
-                if (seconds <= 0) {
-                    clearInterval(intervalTracker);
-                    appendLog(`Completed: ${mode}`);
-                    resetUI();
+                if (remaining > 0) {
+                    display.innerText = formatDuration(remaining);
+                } else if (remaining === 0) {
+                    display.innerText = "00:00";
+                } else {
+                    // OVERFLOW LOGIC
+                    if (!isOverflowing) {
+                        isOverflowing = true;
+                        appendLog(`Target duration reached. Overflow tracking initiated.`, 'warning');
+                        document.getElementById('status-label').innerText = `${activeState.toUpperCase()} - OVERFLOW`;
+                        display.classList.add('overflow');
+                    }
+                    display.innerText = `+${formatDuration(Math.abs(remaining))}`;
                 }
-                seconds--;
             }, 1000);
         }
 
@@ -267,31 +302,43 @@
             clearInterval(intervalTracker);
             activeState = 'Zen Mode';
             isZenMode = true;
-            elapsedZenSeconds = 0;
+            elapsedSeconds = 0;
             
             triggerUIMode('Zen Mode', true);
 
             intervalTracker = setInterval(() => {
-                elapsedZenSeconds++;
+                elapsedSeconds++;
             }, 1000);
+        }
+        
+        function startCalculatedRecovery() {
+            startStandardTimer('Recovery', pendingRecoverySeconds);
         }
 
         function stopCurrentBlock() {
             clearInterval(intervalTracker);
 
             if (isZenMode) {
-                const m = Math.floor(elapsedZenSeconds / 60);
-                const s = elapsedZenSeconds % 60;
+                const m = Math.floor(elapsedSeconds / 60);
+                const s = elapsedSeconds % 60;
                 appendLog(`Concluded: Zen Mode (Duration: ${m}m ${s}s)`);
                 
-                // Calculate rest ratio (1:5 rule. 5 mins work = 1 min rest)
-                const restRequiredSeconds = Math.floor(elapsedZenSeconds / 5);
-                const r_m = Math.floor(restRequiredSeconds / 60);
-                const r_s = restRequiredSeconds % 60;
+                // Calculate 1:5 ratio rest
+                pendingRecoverySeconds = Math.floor(elapsedSeconds / 5);
+                const r_m = Math.floor(pendingRecoverySeconds / 60);
+                const r_s = pendingRecoverySeconds % 60;
                 
-                appendLog(`Calculation: Required recovery period is ${r_m}m ${r_s}s.`, true);
+                appendLog(`Calculation: Required recovery period is ${r_m}m ${r_s}s.`, 'system');
+                
             } else {
-                appendLog(`Interrupted: ${activeState}`);
+                // Log standard timer completion, checking for overflow
+                if (isOverflowing) {
+                    const over_m = Math.floor(Math.abs(targetSeconds - elapsedSeconds) / 60);
+                    const over_s = Math.abs(targetSeconds - elapsedSeconds) % 60;
+                    appendLog(`Concluded: ${activeState} (Includes ${over_m}m ${over_s}s overflow)`, 'warning');
+                } else {
+                    appendLog(`Concluded: ${activeState}`);
+                }
             }
 
             resetUI();
@@ -299,15 +346,27 @@
 
         function resetUI() {
             document.getElementById('timer').innerText = "00:00";
-            document.getElementById('timer').classList.remove('pulse-text');
+            document.getElementById('timer').classList.remove('pulse-text', 'overflow');
             document.getElementById('status-label').innerText = "IDLE";
             
             document.getElementById('primary-controls').style.display = 'grid';
             document.getElementById('stop-btn').style.display = 'none';
             document.body.classList.remove('work-mode');
             
+            // Show the dynamic recovery button only if coming out of Zen mode with accumulated rest
+            if (isZenMode && pendingRecoverySeconds > 0) {
+                const btn = document.getElementById('dynamic-recovery-btn');
+                const m = Math.floor(pendingRecoverySeconds / 60);
+                const s = pendingRecoverySeconds % 60;
+                btn.innerText = `Initiate Calculated Recovery (${m}m ${s}s)`;
+                btn.style.display = 'block';
+            } else {
+                document.getElementById('dynamic-recovery-btn').style.display = 'none';
+            }
+            
             activeState = '';
             isZenMode = false;
+            isOverflowing = false;
         }
     </script>
 </body>
