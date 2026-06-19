@@ -51,7 +51,7 @@
         }
         .nav-link:hover { color: var(--accent); }
 
-        /* Testing Controls (For demo purposes) */
+        /* Testing Controls */
         .test-controls { margin-bottom: 2rem; display: flex; gap: 1rem; }
         .test-controls button {
             font-family: var(--font-mono); font-size: 0.75rem; padding: 0.5rem 1rem;
@@ -150,6 +150,27 @@
         .cell-overflow { color: var(--warning); font-weight: 500; }
         .tag-primed { color: var(--accent); font-size: 0.7em; margin-left: 0.5rem; border: 1px solid var(--accent); padding: 2px 6px; border-radius: 4px; }
         
+        /* Danger Button */
+        .btn-danger {
+            margin-top: 2rem;
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: 1px dashed var(--warning);
+            color: var(--warning);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .btn-danger:hover {
+            background: rgba(217, 119, 87, 0.1);
+        }
+
     </style>
 </head>
 <body>
@@ -232,9 +253,59 @@
         </div>
     </div>
 
+    <button class="btn-danger" onclick="wipeAllData()">[ Purge Local Data ]</button>
+
     <script>
-        // --- SIMULATED DATA SETS ---
-        
+        // --- REAL LOCAL DATA FETCH ---
+        let userSessions = JSON.parse(localStorage.getItem('studySessions')) || [];
+
+        // Note: The structure of userSessions from index.html looks a bit different than our simulated data.
+        // We map the raw blocks from index.html into a flat array of block objects that match our stats schema.
+        function parseRealData() {
+            let parsedData = [];
+            userSessions.forEach(session => {
+                if (session.blocks && session.blocks.length > 0) {
+                    let primedStatus = false;
+                    session.blocks.forEach((block, index) => {
+                        // Check if this block was preceded by a priming block
+                        if (index > 0 && (session.blocks[index-1].taskName === 'DMN Reset' || session.blocks[index-1].taskName === 'Meditation')) {
+                            primedStatus = true;
+                        }
+
+                        // Determine target vs actual
+                        let targetMins = 0;
+                        if (block.taskName === 'Work') targetMins = 25;
+                        else if (block.taskName === 'DMN Reset') targetMins = 10;
+                        else if (block.taskName === 'Meditation') targetMins = 5;
+                        else if (block.taskName === 'Zen Mode') targetMins = '∞';
+                        else if (block.taskName === 'Recovery') targetMins = Math.floor((block.plannedSec || 0) / 60);
+
+                        let actualMins = Math.floor((block.durationSec || 0) / 60);
+                        let overflow = 0;
+                        
+                        if (targetMins !== '∞') {
+                            overflow = actualMins - targetMins;
+                        }
+
+                        parsedData.push({
+                            id: block.blockId.toString().slice(-6), // Use last 6 digits of timestamp as ID
+                            date: new Date(block.startTime).toLocaleDateString(),
+                            mode: block.taskName || 'Focus',
+                            target: targetMins,
+                            actual: actualMins,
+                            overflow: overflow,
+                            primed: primedStatus
+                        });
+                        
+                        // Reset primed status for the next iteration
+                        primedStatus = false; 
+                    });
+                }
+            });
+            return parsedData;
+        }
+
+        // --- SIMULATED DATA SETS (For Testing Buttons) ---
         const sparseData = [
             { id: '001', date: '2023-10-25', mode: 'Work', target: 25, actual: 25, overflow: 0, primed: false },
             { id: '002', date: '2023-10-25', mode: 'Meditation', target: 5, actual: 5, overflow: 0, primed: false },
@@ -324,26 +395,46 @@
             // 5. Render Ledger
             const tbody = document.getElementById('ledger-body');
             tbody.innerHTML = '';
-            data.forEach(d => {
-                const overflowClass = d.overflow > 0 ? 'cell-overflow' : '';
-                const overflowText = d.overflow > 0 ? `+${d.overflow}m` : (d.overflow < 0 ? `${d.overflow}m` : '0');
-                const primedTag = d.primed ? `<span class="tag-primed">PRIMED</span>` : '';
-
+            
+            if (data.length === 0) {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${d.id}</td>
-                    <td>${d.date}</td>
-                    <td>${d.mode} ${primedTag}</td>
-                    <td>${d.target === '∞' ? '∞' : d.target + 'm'}</td>
-                    <td>${d.actual}m</td>
-                    <td class="${overflowClass}">${overflowText}</td>
-                `;
+                tr.innerHTML = `<td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem;">No telemetry data available. Initialize a session from the terminal.</td>`;
                 tbody.appendChild(tr);
-            });
+            } else {
+                // Reverse data so newest is at the top
+                const displayData = [...data].reverse();
+                
+                displayData.forEach(d => {
+                    const overflowClass = d.overflow > 0 ? 'cell-overflow' : '';
+                    const overflowText = d.overflow > 0 ? `+${d.overflow}m` : (d.overflow < 0 ? `${d.overflow}m` : '0');
+                    const primedTag = d.primed ? `<span class="tag-primed">PRIMED</span>` : '';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${d.id}</td>
+                        <td>${d.date}</td>
+                        <td>${d.mode} ${primedTag}</td>
+                        <td>${d.target === '∞' ? '∞' : d.target + 'm'}</td>
+                        <td>${d.actual}m</td>
+                        <td class="${overflowClass}">${overflowText}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
         }
 
-        // Initialize with rich data for demonstration
-        window.onload = () => renderDashboard(richData);
+        function wipeAllData() {
+            if (confirm("SYSTEM WARNING: This action will permanently purge all local session telemetry. Do you wish to proceed?")) {
+                localStorage.removeItem('studySessions');
+                window.location.reload();
+            }
+        }
+
+        // Initialize: Try to load real data, fallback to empty array if none exists.
+        window.onload = () => {
+            const actualData = parseRealData();
+            renderDashboard(actualData);
+        };
 
     </script>
 </body>
