@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cognitive Protocol Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F5F5F7; /* Soft gray */
+            --text-primary: #1E3A5F; /* Deep blue */
+            --accent: #4A9B9B; /* Muted teal */
+            --border-strict: 1px solid #1E3A5F;
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'Roboto Mono', monospace;
+        }
+
+        /* OLED Mode Overrides for Phase 3 */
+        body.oled-mode {
+            background-color: #000000;
+            color: #F5F5F7;
+        }
+        body.oled-mode .container {
+            border-color: #333;
+        }
+        body.oled-mode button {
+            border-color: #F5F5F7;
+            color: #F5F5F7;
+        }
+        body.oled-mode button:hover {
+            background-color: #F5F5F7;
+            color: #000000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 2rem;
+            border: var(--border-strict);
+            background: transparent;
+        }
+
+        h1, h2, h3 {
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        .mono {
+            font-family: var(--font-mono);
+        }
+
+        /* Forms & Inputs */
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            background: transparent;
+            border: var(--border-strict);
+            color: inherit;
+            margin-bottom: 1.5rem;
+            outline: none;
+        }
+        
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        /* Buttons */
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            font-weight: 500;
+            background: transparent;
+            border: var(--border-strict);
+            color: inherit;
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        button:hover {
+            background-color: var(--text-primary);
+            color: var(--bg);
+        }
+
+        button.accent-btn:hover {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+
+        /* Protocol Cards */
+        .protocol-card {
+            border: var(--border-strict);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+        }
+
+        .protocol-card:hover {
+            border-color: var(--accent);
+        }
+
+        .protocol-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(30, 58, 95, 0.2);
+            padding-bottom: 0.5rem;
+        }
+
+        .protocol-title {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .protocol-time {
+            font-family: var(--font-mono);
+            color: var(--accent);
+        }
+
+        .methodology {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .mechanism {
+            font-size: 0.85rem;
+            color: #555; /* Slightly muted text for depth */
+        }
+
+        /* Phase Visibility */
+        .phase { display: none; }
+        .phase.active { display: block; }
+
+        /* Timer Display */
+        .timer-display {
+            font-size: 4rem;
+            font-weight: 400;
+            text-align: center;
+            margin: 3rem 0;
+            letter-spacing: -0.05em;
+        }
+
+        .nav-link {
+            display: block;
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.85rem;
+            color: inherit;
+            text-decoration: underline;
+            text-transform: uppercase;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- PHASE 1: Objective Anchor -->
+        <div id="phase-1" class="phase active">
+            <h2>Phase I: Parameter Definition</h2>
+            <p class="methodology" style="margin-bottom: 1.5rem;">Declare the cognitive target for the upcoming block. Specificity reduces task friction.</p>
+            <input type="text" id="objective-input" placeholder="e.g., Complete calculus problem set 4...">
+            <button onclick="advanceToPhase(2)">Lock Parameters</button>
+            <a href="stats.html" class="nav-link">View Session Data Analytics</a>
+        </div>
+
+        <!-- PHASE 2: Priming Protocol -->
+        <div id="phase-2" class="phase">
+            <h2>Phase II: Priming Selection</h2>
+            <p class="methodology" style="margin-bottom: 1.5rem;">Select an intervention to calibrate baseline neurochemistry prior to execution.</p>
+
+            <div class="protocol-card" onclick="startProtocol('DMN Reset', 600)">
+                <div class="protocol-header">
+                    <span class="protocol-title">Protocol A: DMN Reset</span>
+                    <span class="protocol-time">10:00</span>
+                </div>
+                <div class="methodology"><strong>Method:</strong> Unstructured visual fixation (stimulus deprivation).</div>
+                <div class="mechanism"><strong>Mechanism:</strong> Lowers baseline dopamine threshold; increases relative salience of subsequent cognitive tasks.</div>
+            </div>
+
+            <div class="protocol-card" onclick="startProtocol('Attentional Calibration', 300)">
+                <div class="protocol-header">
+                    <span class="protocol-title">Protocol B: Attentional Calibration</span>
+                    <span class="protocol-time">05:00</span>
+                </div>
+                <div class="methodology"><strong>Method:</strong> Focused-attention meditation (anchored to respiration).</div>
+                <div class="mechanism"><strong>Mechanism:</strong> Engages anterior cingulate cortex (ACC) to improve sustained attention.</div>
+            </div>
+
+            <div class="protocol-card" onclick="startProtocol('Direct Override', 0)">
+                <div class="protocol-header">
+                    <span class="protocol-title">Protocol C: Direct Execution</span>
+                    <span class="protocol-time">00:00</span>
+                </div>
+                <div class="methodology"><strong>Method:</strong> Immediate task commencement.</div>
+                <div class="mechanism"><strong>Mechanism:</strong> Bypass priming protocols. Recommended only if flow state is already active.</div>
+            </div>
+            
+            <button style="margin-top: 1rem; border-color: transparent;" onclick="advanceToPhase(1)">← Re-define Parameters</button>
+        </div>
+
+        <!-- PHASE 3: Execution / Flow -->
+        <div id="phase-3" class="phase">
+            <h3 class="mono" style="text-align: center; font-size: 0.9rem; text-transform: uppercase; color: #888;">Active Objective</h3>
+            <p id="display-objective" style="text-align: center; font-size: 1.25rem; font-weight: 500; margin-bottom: 1rem;"></p>
+            
+            <div id="active-state-label" class="mono" style="text-align: center; font-size: 0.85rem; color: var(--accent);">PRIMING SEQUENCE RUNNING</div>
+            
+            <div class="timer-display mono" id="timer">10:00</div>
+            
+            <button class="accent-btn" onclick="concludePhase()">Conclude Phase</button>
+        </div>
+    </div>
+
+    <script>
+        let countdown;
+
+        function advanceToPhase(phaseNum) {
+            document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+            document.getElementById(`phase-${phaseNum}`).classList.add('active');
+            
+            if(phaseNum !== 3) {
+                document.body.classList.remove('oled-mode');
+            }
+        }
+
+        function startProtocol(name, seconds) {
+            const objective = document.getElementById('objective-input').value || "Undisclosed objective";
+            document.getElementById('display-objective').innerText = objective;
+            
+            advanceToPhase(3);
+            
+            if (seconds === 0) {
+                // Direct Execution (OLED black, no timer shown just work state)
+                document.body.classList.add('oled-mode');
+                document.getElementById('active-state-label').innerText = "COGNITIVE BLOCK: ACTIVE";
+                document.getElementById('timer').innerText = "FLOW";
+            } else {
+                // Priming Phase (Timer running)
+                document.body.classList.remove('oled-mode'); // Keep clinical gray for priming
+                document.getElementById('active-state-label').innerText = `PROTOCOL: ${name.toUpperCase()}`;
+                runTimer(seconds);
+            }
+        }
+
+        function runTimer(seconds) {
+            clearInterval(countdown);
+            const display = document.getElementById('timer');
+            
+            countdown = setInterval(() => {
+                const minutes = Math.floor(seconds / 60);
+                const remainderSeconds = seconds % 60;
+                display.innerText = `${minutes < 10 ? '0' : ''}${minutes}:${remainderSeconds < 10 ? '0' : ''}${remainderSeconds}`;
+                
+                if (seconds <= 0) {
+                    clearInterval(countdown);
+                    // Automatically transition to Work state (OLED black) when priming is done
+                    document.body.classList.add('oled-mode');
+                    document.getElementById('active-state-label').innerText = "COGNITIVE BLOCK: ACTIVE";
+                    display.innerText = "FLOW";
+                }
+                seconds--;
+            }, 1000);
+        }
+
+        function concludePhase() {
+            clearInterval(countdown);
+            document.getElementById('objective-input').value = '';
+            advanceToPhase(1);
+        }
+    </script>
+</body>
+</html>
