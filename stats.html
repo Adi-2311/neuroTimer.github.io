@@ -8,10 +8,12 @@
     <style>
         :root {
             --bg: #F5F5F7;
+            --surface: #FFFFFF;
             --text-primary: #1E3A5F;
+            --text-muted: #6B7C93;
             --accent: #4A9B9B;
             --warning: #D97757;
-            --border-strict: 1px solid #1E3A5F;
+            --border-soft: 1px solid rgba(30, 58, 95, 0.1);
             --font-sans: 'Inter', sans-serif;
             --font-mono: 'Roboto Mono', monospace;
         }
@@ -24,207 +26,221 @@
             color: var(--text-primary);
             line-height: 1.6;
             padding: 2rem;
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
         }
 
         .mono { font-family: var(--font-mono); }
 
+        /* Header */
         header {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            border-bottom: var(--border-strict);
-            padding-bottom: 1rem;
             margin-bottom: 2rem;
         }
 
-        h1 { font-size: 1.25rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
+        h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
         
         .nav-link {
-            font-family: var(--font-mono);
             font-size: 0.85rem;
-            color: var(--text-primary);
+            font-weight: 500;
+            color: var(--text-muted);
             text-decoration: none;
-            border: var(--border-strict);
-            padding: 0.25rem 0.75rem;
-            transition: all 0.2s ease;
+            transition: color 0.2s ease;
         }
-        .nav-link:hover { background: var(--text-primary); color: var(--bg); }
+        .nav-link:hover { color: var(--accent); }
 
         /* Testing Controls (For demo purposes) */
         .test-controls { margin-bottom: 2rem; display: flex; gap: 1rem; }
         .test-controls button {
-            font-family: var(--font-mono); font-size: 0.75rem; padding: 0.5rem;
-            background: transparent; border: 1px dashed var(--accent); color: var(--accent); cursor: pointer;
+            font-family: var(--font-mono); font-size: 0.75rem; padding: 0.5rem 1rem;
+            background: transparent; border: 1px dashed var(--accent); color: var(--accent); 
+            border-radius: 8px; cursor: pointer; transition: all 0.2s;
         }
-        .test-controls button:hover { background: var(--accent); color: var(--bg); }
+        .test-controls button:hover { background: rgba(74, 155, 155, 0.1); }
 
-        /* Layout Grids */
-        .dashboard-grid {
+        /* Clinical Bento Grid System */
+        .bento-grid {
             display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
-        @media (max-width: 768px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-        }
-
-        .section-title {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--accent);
-        }
-
-        /* Basic Telemetry */
-        .telemetry-box {
-            border: var(--border-strict);
-            padding: 1rem;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-        .data-point { display: flex; justify-content: space-between; border-bottom: 1px dotted rgba(30, 58, 95, 0.3); padding-bottom: 0.25rem; }
-        .data-label { font-size: 0.85rem; }
-        .data-value { font-family: var(--font-mono); font-weight: 500; }
-
-        /* Empirical Synthesis */
-        .synthesis-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-        .insight-card {
-            border: var(--border-strict);
-            padding: 1rem;
+        .bento-card {
+            background-color: var(--surface);
+            border-radius: 24px;
+            padding: 1.5rem;
+            border: var(--border-soft);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
             display: flex;
             flex-direction: column;
-            position: relative;
         }
-        
-        .insight-title { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; }
-        .insight-desc { font-size: 0.75rem; opacity: 0.8; margin-bottom: 1rem; line-height: 1.4; flex-grow: 1; }
-        .insight-value { font-family: var(--font-mono); font-size: 1.5rem; text-align: right; border-top: 1px dotted rgba(30,58,95,0.3); padding-top: 0.5rem;}
-        
-        .math-symbol { color: var(--accent); font-style: italic; margin-right: 0.25rem; }
 
-        /* Locked State */
-        .locked-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: repeating-linear-gradient(45deg, var(--bg), var(--bg) 10px, rgba(30, 58, 95, 0.05) 10px, rgba(30, 58, 95, 0.05) 20px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px dashed var(--text-primary);
-            z-index: 10;
+        .span-2 { grid-column: span 2; }
+        .span-3 { grid-column: span 3; }
+
+        @media (max-width: 800px) {
+            .bento-grid { grid-template-columns: 1fr; }
+            .span-2, .span-3 { grid-column: span 1; }
         }
-        .locked-text {
-            background: var(--bg);
-            border: var(--border-strict);
-            padding: 0.25rem 0.5rem;
-            font-family: var(--font-mono);
+
+        /* Typography inside Cards */
+        .card-title {
             font-size: 0.75rem;
             text-transform: uppercase;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
         }
 
-        /* Ledger Table */
+        .card-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            line-height: 1.4;
+            flex-grow: 1;
+        }
+
+        .metric-value {
+            font-family: var(--font-mono);
+            font-size: 2.5rem;
+            font-weight: 400;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .metric-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .math-symbol { color: var(--accent); font-style: italic; margin-right: 0.25rem; font-size: 1.5rem; }
+        
+        /* The "Not Enough Data" Status */
+        .awaiting-data {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: var(--bg);
+            padding: 0.75rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px dashed rgba(30, 58, 95, 0.2);
+            margin-top: auto;
+        }
+
+        /* Ledger Table inside Bento Card */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
         table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.85rem; }
-        th, td { border: var(--border-strict); padding: 0.5rem 0.75rem; text-align: left; }
-        th { font-family: var(--font-sans); text-transform: uppercase; font-size: 0.75rem; font-weight: 600; background: rgba(30, 58, 95, 0.05); }
-        tr:hover { background: rgba(74, 155, 155, 0.1); }
-        .cell-overflow { color: var(--warning); }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid rgba(30, 58, 95, 0.05); }
+        th { font-family: var(--font-sans); text-transform: uppercase; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(74, 155, 155, 0.03); }
+        
+        .cell-overflow { color: var(--warning); font-weight: 500; }
+        .tag-primed { color: var(--accent); font-size: 0.7em; margin-left: 0.5rem; border: 1px solid var(--accent); padding: 2px 6px; border-radius: 4px; }
         
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Cognitive Output Report</h1>
+        <div>
+            <h1>Cognitive Output Report</h1>
+            <div class="mono" style="font-size: 0.85rem; color: var(--text-muted);">Subject: Local User | Empirical Synthesis</div>
+        </div>
         <a href="index.html" class="nav-link">&larr; Return to Terminal</a>
     </header>
 
-    <!-- Developer toggles to demonstrate the logic -->
     <div class="test-controls">
         <button onclick="renderDashboard(sparseData)">[Inject Sparse Data (n < 10)]</button>
         <button onclick="renderDashboard(richData)">[Inject Rich Data (n > 10)]</button>
     </div>
 
-    <div class="dashboard-grid">
-        <!-- Raw Telemetry -->
-        <div>
-            <div class="section-title">I. Raw Telemetry</div>
-            <div class="telemetry-box" id="telemetry-box">
-                <!-- Populated by JS -->
-            </div>
+    <div class="bento-grid">
+        <div class="bento-card">
+            <div class="card-title">Sample Size (n)</div>
+            <div class="metric-value" id="val-cycles">--</div>
+            <div class="metric-sub"><span>Total Recorded Blocks</span></div>
+        </div>
+        <div class="bento-card">
+            <div class="card-title">Cumulative Work</div>
+            <div class="metric-value" id="val-work">--</div>
+            <div class="metric-sub"><span>Minutes Output</span></div>
+        </div>
+        <div class="bento-card">
+            <div class="card-title">Cumulative Rest</div>
+            <div class="metric-value" id="val-rest">--</div>
+            <div class="metric-sub"><span>Minutes Recovered</span></div>
+        </div>
+    </div>
+
+    <div class="bento-grid">
+        
+        <div class="bento-card">
+            <div class="card-title">Protocol Adherence Variance</div>
+            <div class="card-desc">Standard deviation (σ) of block overflow. A lower variance indicates higher cognitive discipline.</div>
+            <div id="container-pav">
+                </div>
         </div>
 
-        <!-- Empirical Synthesis -->
-        <div>
-            <div class="section-title">II. Empirical Synthesis</div>
-            <div class="synthesis-grid">
-                
-                <!-- Insight 1 -->
-                <div class="insight-card">
-                    <div id="lock-pav" class="locked-overlay"><div class="locked-text">Requires n ≥ 10 Work Blocks</div></div>
-                    <div class="insight-title">Protocol Adherence Variance</div>
-                    <div class="insight-desc">Standard deviation (σ) of block overflow. Lower variance indicates higher cognitive discipline.</div>
-                    <div class="insight-value"><span class="math-symbol">σ =</span> <span id="val-pav">--</span></div>
+        <div class="bento-card">
+            <div class="card-title">Priming Yield Index</div>
+            <div class="card-desc">Compares output of Work blocks preceded by a DMN/Meditate sequence versus "Cold" blocks.</div>
+            <div id="container-pyi">
                 </div>
+        </div>
 
-                <!-- Insight 2 -->
-                <div class="insight-card">
-                    <div id="lock-pyi" class="locked-overlay"><div class="locked-text">Requires n ≥ 5 Primed Blocks</div></div>
-                    <div class="insight-title">Priming Yield Index</div>
-                    <div class="insight-desc">Compares duration of Work blocks preceded by a DMN/Meditate sequence vs. "Cold" blocks.</div>
-                    <div class="insight-value"><span class="math-symbol">Δ =</span> <span id="val-pyi">--</span></div>
+        <div class="bento-card">
+            <div class="card-title">Homeostatic Recovery Deficit</div>
+            <div class="card-desc">Evaluates rest vs. work against the 1:5 Zen baseline. Negative numbers indicate fatigue.</div>
+            <div id="container-hrd">
                 </div>
+        </div>
 
-                <!-- Insight 3 -->
-                <div class="insight-card" style="grid-column: 1 / -1;">
-                    <div id="lock-hrd" class="locked-overlay"><div class="locked-text">Requires n ≥ 10 Total Cycles</div></div>
-                    <div class="insight-title">Homeostatic Recovery Deficit</div>
-                    <div class="insight-desc">Calculates aggregated rest vs. work against the optimal 1:5 Zen ratio constraint. Negative % indicates accumulated cognitive fatigue.</div>
-                    <div class="insight-value"><span class="math-symbol">μ =</span> <span id="val-hrd">--</span></div>
-                </div>
+    </div>
 
+    <div class="bento-grid">
+        <div class="bento-card span-3">
+            <div class="card-title">Immutable Session Ledger</div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Mode</th>
+                            <th>Target</th>
+                            <th>Actual Output</th>
+                            <th>Variance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledger-body">
+                        </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Session Ledger -->
-    <div class="section-title">III. Immutable Session Ledger</div>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Date</th>
-                <th>Mode</th>
-                <th>Target</th>
-                <th>Actual</th>
-                <th>Overflow / Variance</th>
-            </tr>
-        </thead>
-        <tbody id="ledger-body">
-            <!-- Populated by JS -->
-        </tbody>
-    </table>
-
     <script>
         // --- SIMULATED DATA SETS ---
         
-        // Sparse Data (User just started using the app)
         const sparseData = [
             { id: '001', date: '2023-10-25', mode: 'Work', target: 25, actual: 25, overflow: 0, primed: false },
             { id: '002', date: '2023-10-25', mode: 'Meditation', target: 5, actual: 5, overflow: 0, primed: false },
             { id: '003', date: '2023-10-25', mode: 'Work', target: 25, actual: 28, overflow: 3, primed: true }
         ];
 
-        // Rich Data (User has established a baseline)
         const richData = [
             { id: '015', date: '2023-10-28', mode: 'Work', target: 25, actual: 26, overflow: 1, primed: true },
             { id: '014', date: '2023-10-28', mode: 'DMN Reset', target: 10, actual: 10, overflow: 0, primed: false },
@@ -243,8 +259,7 @@
             { id: '001', date: '2023-10-25', mode: 'Work', target: 25, actual: 32, overflow: 7, primed: false }
         ];
 
-        // --- MATH & STATISTICS ENGINE ---
-
+        // --- MATH ENGINE ---
         function calculateStandardDeviation(arr) {
             if (arr.length === 0) return 0;
             const mean = arr.reduce((acc, val) => acc + val, 0) / arr.length;
@@ -253,65 +268,57 @@
         }
 
         function renderDashboard(data) {
-            // 1. Process Basic Telemetry
+            
+            // 1. Raw Telemetry
             const totalBlocks = data.length;
             const totalWorkMins = data.filter(d => d.mode === 'Work' || d.mode === 'Zen Mode').reduce((acc, d) => acc + d.actual, 0);
             const totalRestMins = data.filter(d => d.mode === 'Recovery' || d.mode === 'Meditation' || d.mode === 'DMN Reset').reduce((acc, d) => acc + d.actual, 0);
             const workBlocks = data.filter(d => d.mode === 'Work');
             const workCount = workBlocks.length;
 
-            document.getElementById('telemetry-box').innerHTML = `
-                <div class="data-point"><span class="data-label">Sample Size (n)</span><span class="data-value">${totalBlocks}</span></div>
-                <div class="data-point"><span class="data-label">Cumulative Work</span><span class="data-value">${totalWorkMins}m</span></div>
-                <div class="data-point"><span class="data-label">Cumulative Rest</span><span class="data-value">${totalRestMins}m</span></div>
-                <div class="data-point"><span class="data-label">Data Integrity</span><span class="data-value" style="color: var(--accent);">Verified</span></div>
-            `;
+            document.getElementById('val-cycles').innerText = totalBlocks;
+            document.getElementById('val-work').innerText = `${totalWorkMins}m`;
+            document.getElementById('val-rest').innerText = `${totalRestMins}m`;
 
-            // 2. Calculate Protocol Adherence Variance (PAV)
-            // Rule: Requires n >= 10 Work blocks. Calculates std deviation of overflow.
+            // 2. Protocol Adherence Variance (PAV) -> Threshold: 10 Work Blocks
+            const pavContainer = document.getElementById('container-pav');
             if (workCount >= 10) {
-                const overflows = workBlocks.map(d => d.overflow);
-                const stdDev = calculateStandardDeviation(overflows);
-                document.getElementById('lock-pav').style.display = 'none';
-                document.getElementById('val-pav').innerText = `±${stdDev.toFixed(1)}m`;
+                const stdDev = calculateStandardDeviation(workBlocks.map(d => d.overflow));
+                pavContainer.innerHTML = `<div class="metric-value"><span class="math-symbol">σ =</span> ±${stdDev.toFixed(1)}m</div>`;
             } else {
-                document.getElementById('lock-pav').style.display = 'flex';
-                document.getElementById('lock-pav').innerHTML = `<div class="locked-text">Requires n ≥ 10 Work (Current: ${workCount})</div>`;
+                pavContainer.innerHTML = `<div class="awaiting-data">Awaiting Data (n=${workCount}/10 Work)</div>`;
             }
 
-            // 3. Calculate Priming Yield Index (PYI)
-            // Rule: Requires at least 5 primed blocks and 5 cold blocks. 
+            // 3. Priming Yield Index (PYI) -> Threshold: 5 Primed / 5 Cold
             const primedWorks = workBlocks.filter(d => d.primed);
             const coldWorks = workBlocks.filter(d => !d.primed);
+            const pyiContainer = document.getElementById('container-pyi');
+            
             if (primedWorks.length >= 5 && coldWorks.length >= 5) {
                 const avgPrimed = primedWorks.reduce((acc, d) => acc + d.actual, 0) / primedWorks.length;
                 const avgCold = coldWorks.reduce((acc, d) => acc + d.actual, 0) / coldWorks.length;
                 const yieldPercent = ((avgPrimed - avgCold) / avgCold) * 100;
                 
-                document.getElementById('lock-pyi').style.display = 'none';
-                document.getElementById('val-pyi').innerText = `${yieldPercent > 0 ? '+' : ''}${yieldPercent.toFixed(1)}%`;
-                document.getElementById('val-pyi').style.color = yieldPercent > 0 ? "var(--accent)" : "var(--warning)";
+                const color = yieldPercent > 0 ? "var(--accent)" : "var(--warning)";
+                pyiContainer.innerHTML = `<div class="metric-value" style="color: ${color};"><span class="math-symbol">Δ =</span> ${yieldPercent > 0 ? '+' : ''}${yieldPercent.toFixed(1)}%</div>`;
             } else {
-                document.getElementById('lock-pyi').style.display = 'flex';
-                document.getElementById('lock-pyi').innerHTML = `<div class="locked-text">Req. 5 Primed/5 Cold (Current: ${primedWorks.length}/${coldWorks.length})</div>`;
+                const currentStatus = Math.min(primedWorks.length, coldWorks.length);
+                pyiContainer.innerHTML = `<div class="awaiting-data">Awaiting Data (n=${currentStatus}/5 Pairs)</div>`;
             }
 
-            // 4. Calculate Homeostatic Recovery Deficit
-            // Rule: Requires n >= 10 total blocks. Uses the 1:5 ratio rule.
+            // 4. Homeostatic Recovery Deficit -> Threshold: 10 Total Blocks
+            const hrdContainer = document.getElementById('container-hrd');
             if (totalBlocks >= 10) {
-                const requiredRest = totalWorkMins / 5;
+                const requiredRest = totalWorkMins / 5; // 1:5 ratio
                 const deficit = totalRestMins - requiredRest;
                 
-                document.getElementById('lock-hrd').style.display = 'none';
-                
                 if (deficit < 0) {
-                    document.getElementById('val-hrd').innerHTML = `<span style="color: var(--warning);">${deficit.toFixed(1)}m Deficit</span>`;
+                    hrdContainer.innerHTML = `<div class="metric-value" style="color: var(--warning);"><span class="math-symbol">μ =</span> ${deficit.toFixed(1)}m</div>`;
                 } else {
-                    document.getElementById('val-hrd').innerHTML = `+${deficit.toFixed(1)}m Surplus`;
+                    hrdContainer.innerHTML = `<div class="metric-value"><span class="math-symbol">μ =</span> +${deficit.toFixed(1)}m</div>`;
                 }
             } else {
-                document.getElementById('lock-hrd').style.display = 'flex';
-                document.getElementById('lock-hrd').innerHTML = `<div class="locked-text">Requires n ≥ 10 Total (Current: ${totalBlocks})</div>`;
+                hrdContainer.innerHTML = `<div class="awaiting-data">Awaiting Data (n=${totalBlocks}/10 Total)</div>`;
             }
 
             // 5. Render Ledger
@@ -320,15 +327,13 @@
             data.forEach(d => {
                 const overflowClass = d.overflow > 0 ? 'cell-overflow' : '';
                 const overflowText = d.overflow > 0 ? `+${d.overflow}m` : (d.overflow < 0 ? `${d.overflow}m` : '0');
-                
-                // Add a visual indicator if the block was primed
-                const modeText = d.primed ? `${d.mode} <span style="color:var(--accent); font-size:0.7em;">[PRIMED]</span>` : d.mode;
+                const primedTag = d.primed ? `<span class="tag-primed">PRIMED</span>` : '';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${d.id}</td>
                     <td>${d.date}</td>
-                    <td>${modeText}</td>
+                    <td>${d.mode} ${primedTag}</td>
                     <td>${d.target === '∞' ? '∞' : d.target + 'm'}</td>
                     <td>${d.actual}m</td>
                     <td class="${overflowClass}">${overflowText}</td>
