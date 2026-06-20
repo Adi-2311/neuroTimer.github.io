@@ -337,7 +337,7 @@
                 noiseSource.loop = true;
 
                 const gainNode = audioCtx.createGain();
-                gainNode.gain.value = 0.5; 
+                gainNode.gain.value = 0.5; // Increased gain
 
                 noiseSource.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
@@ -347,7 +347,7 @@
             } else if (mode === 'GAMMA') {
                 // 40Hz Binaural Beats (200Hz Left, 240Hz Right)
                 const gainNode = audioCtx.createGain();
-                gainNode.gain.value = 0.5; // Keep it subtle to prevent headache
+                gainNode.gain.value = 0.5; // Increased gain
 
                 oscLeft = audioCtx.createOscillator();
                 oscLeft.type = 'sine';
@@ -374,6 +374,56 @@
             if (noiseSource) { noiseSource.stop(); noiseSource.disconnect(); noiseSource = null; }
             if (oscLeft) { oscLeft.stop(); oscLeft.disconnect(); oscLeft = null; }
             if (oscRight) { oscRight.stop(); oscRight.disconnect(); oscRight = null; }
+        }
+
+        // --- SYNTHESIZED SYSTEM ALERTS ---
+        function playWarningChime() {
+            initAudio();
+            const playTone = (freq, timeOffset) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                
+                gain.gain.setValueAtTime(0, audioCtx.currentTime + timeOffset);
+                gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + timeOffset + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + timeOffset + 0.5);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(audioCtx.currentTime + timeOffset);
+                osc.stop(audioCtx.currentTime + timeOffset + 0.5);
+            };
+            
+            playTone(523.25, 0);   
+            playTone(523.25, 0.4); 
+        }
+
+        function playScienceAlert() {
+            initAudio();
+            const freqs = [440, 554.37, 659.25, 880]; 
+            
+            freqs.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'square'; 
+                osc.frequency.value = freq;
+                
+                const startTime = audioCtx.currentTime + (index * 0.1);
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.1, startTime + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.1);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 0.1);
+            });
         }
 
         // --- ENVIRONMENT VARIABLE LOGIC ---
@@ -543,7 +593,6 @@
             
             document.querySelectorAll('.cmd-btn').forEach(btn => btn.classList.remove('active'));
             
-            // Map button ID
             let btnId = '';
             if (mode === 'DMN Reset') btnId = 'btn-dmn';
             else if (mode === 'Meditation') btnId = 'btn-med';
@@ -572,8 +621,18 @@
                 secondsElapsed++;
                 updateDisplay();
 
-                // Auto-Chaining Check
+                let timeRemaining = targetSeconds ? targetSeconds - secondsElapsed : null;
+
+                // --- AUDIO TRIGGERS ---
+                if (timeRemaining === 30) {
+                    playWarningChime();
+                    appendLog(`[System] Acoustic warning: 30s remaining.`);
+                }
+
+                // Auto-Chaining Check & Completion
                 if (targetSeconds && secondsElapsed === targetSeconds) {
+                    playScienceAlert(); 
+
                     if (currentMode === 'DMN Reset' || currentMode === 'Meditation') {
                         saveBlockData();
                         appendLog(`Priming complete. Auto-chaining to Work [25M].`);
@@ -584,6 +643,8 @@
                         appendLog(`Ultradian block complete. Auto-chaining to mandatory Recovery [20M].`);
                         resetUI();
                         setTimeout(() => startProtocol('Recovery', 20), 500);
+                    } else {
+                        appendLog(`[System] Protocol phase complete.`);
                     }
                 }
             }, 1000);
