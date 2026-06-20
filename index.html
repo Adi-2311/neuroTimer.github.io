@@ -3,507 +3,660 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Focus Terminal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>Protocol Terminal - Empirical Input</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #F5F5F7;
-            --text-primary: #1E3A5F;
-            --accent: #4A9B9B;
-            --warning: #D97757;
-            --border-strict: 1px solid #1E3A5F;
+            --bg-color: #EBEBEB;
+            --panel-bg: #F5F5F5;
+            --text-main: #111111;
+            --text-muted: #666666;
+            --border-hard: 1px solid #111111;
+            --border-soft: 1px solid #CCCCCC;
+            --highlight: #111111;
+            --warning-bg: #333333;
+            --warning-text: #FFFFFF;
             --font-sans: 'Inter', sans-serif;
             --font-mono: 'Roboto Mono', monospace;
         }
 
-        body.work-mode {
-            background-color: #000000;
-            color: #F5F5F7;
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            border-radius: 0 !important; 
         }
-        body.work-mode .terminal-container { border-color: #333; }
-        body.work-mode button, body.work-mode select { border-color: #F5F5F7; color: #F5F5F7; }
-        body.work-mode button:hover { background-color: #F5F5F7; color: #000000; }
-        body.work-mode input, body.work-mode .event-log, body.work-mode .audio-toggles { border-color: #333; }
-        body.work-mode .log-entry { border-bottom-color: rgba(245, 245, 247, 0.3); }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: var(--font-sans);
-            background-color: var(--bg);
-            color: var(--text-primary);
-            line-height: 1.6;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 1rem;
-        }
-
-        .terminal-container {
-            width: 100%;
-            max-width: 800px;
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 2rem;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
             padding: 2rem;
-            border: var(--border-strict);
-            background: transparent;
+            max-width: 900px;
+            margin: 0 auto;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        .main-panel { display: flex; flex-direction: column; position: relative; }
-
-        h1 {
-            font-size: 1rem;
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            border-bottom: var(--border-strict);
-            padding-bottom: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* OLED Work Mode Override */
+        body.work-mode {
+            background-color: #000000;
+            color: #F5F5F7;
+            --bg-color: #000000;
+            --panel-bg: #111111;
+            --text-main: #F5F5F7;
+            --text-muted: #888888;
+            --border-hard: 1px solid #333333;
+            --border-soft: 1px solid #222222;
         }
 
         .mono { font-family: var(--font-mono); }
 
-        .input-group {
-            display: flex; gap: 1rem; margin-bottom: 2rem;
+        /* Header */
+        header {
+            display: flex; justify-content: space-between; align-items: flex-end; 
+            border-bottom: var(--border-hard);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        h1 { font-size: 1.25rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .nav-link { 
+            font-family: var(--font-mono); font-size: 0.85rem; font-weight: 500; 
+            color: var(--text-main); text-decoration: none; 
+            border: var(--border-hard); padding: 0.25rem 0.75rem;
+            background: var(--bg-color);
+            transition: all 0.1s;
+        }
+        .nav-link:hover { background: var(--text-main); color: var(--bg-color); }
+        body.work-mode .nav-link:hover { background: #F5F5F7; color: #000000; }
+
+        /* Main Display Panel */
+        .panel {
+            background-color: var(--panel-bg);
+            border: var(--border-hard);
+            margin-bottom: 2rem;
         }
 
-        input[type="text"] {
-            flex-grow: 1;
-            padding: 0.75rem;
-            font-family: var(--font-mono);
-            font-size: 1rem;
-            background: transparent;
-            border: var(--border-strict);
-            color: inherit;
-            outline: none;
+        .controls-header {
+            font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase;
+            padding: 0.5rem 1rem; border-bottom: var(--border-hard);
+            background: rgba(0,0,0,0.05); letter-spacing: 0.05em;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        select.env-select {
-            padding: 0.75rem;
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            background: transparent;
-            border: var(--border-strict);
-            color: inherit;
-            outline: none;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-        body.work-mode select.env-select option { background: #000; color: #FFF; }
-
-        .audio-toggles {
-            display: flex; justify-content: center; gap: 1rem; margin-top: -1rem; margin-bottom: 1rem;
-            font-family: var(--font-mono); font-size: 0.75rem;
-        }
+        /* Acoustic Entrainment Toggles */
+        .audio-controls { display: flex; gap: 0.5rem; align-items: center; }
         .audio-btn {
-            background: transparent; border: none; padding: 0.25rem 0.5rem; cursor: pointer; color: inherit; opacity: 0.5; border-bottom: 1px solid transparent;
+            font-family: var(--font-mono); font-size: 0.65rem; padding: 0.2rem 0.5rem;
+            background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted);
+            cursor: pointer; transition: all 0.2s;
         }
-        .audio-btn.active { opacity: 1; border-bottom: 1px solid var(--accent); color: var(--accent); }
+        .audio-btn:hover { border-color: var(--text-main); color: var(--text-main); }
+        .audio-btn.active { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main); }
 
         .timer-display {
-            font-size: 5rem;
-            font-weight: 400;
+            padding: 4rem 2rem;
             text-align: center;
-            margin: 1rem 0 2rem 0;
-            letter-spacing: -0.05em;
+            cursor: default;
+        }
+        .time-value { 
+            font-family: var(--font-mono); font-size: 6rem; font-weight: 400; 
+            color: var(--text-main); line-height: 1; margin-bottom: 1rem; letter-spacing: -0.02em;
             font-variant-numeric: tabular-nums;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: color 0.3s ease;
+        }
+        .time-value.overflow { color: var(--warning-bg); }
+        body.work-mode .time-value.overflow { color: #FF6B6B; }
+        .time-label { 
+            font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); 
+            text-transform: uppercase; letter-spacing: 0.1em; 
+        }
+        .timer-display.overflowing {
+            background-color: var(--warning-bg);
+            color: var(--warning-text);
+        }
+        .timer-display.overflowing .time-label { color: #AAAAAA; }
+
+        /* Control Grid Panel */
+        .control-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+        }
+        .cmd-btn {
+            background-color: transparent; border: none; border-right: var(--border-hard); border-bottom: var(--border-hard);
+            padding: 1.5rem 1rem; cursor: pointer; transition: all 0.1s; text-align: left;
+            display: flex; flex-direction: column; justify-content: flex-start;
+            color: var(--text-main);
+        }
+        .cmd-btn:nth-child(even) { border-right: none; }
+        .cmd-btn:nth-last-child(-n+2) { border-bottom: none; }
+        
+        .cmd-btn:hover { background: rgba(0,0,0,0.05); }
+        body.work-mode .cmd-btn:hover { background: rgba(255,255,255,0.05); }
+        
+        .cmd-btn.active { background: var(--text-main); color: var(--bg-color); }
+        .cmd-btn.active .btn-desc { color: var(--bg-color); opacity: 0.7; }
+        
+        .btn-title { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase; }
+        .btn-desc { font-family: var(--font-sans); font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; }
+
+        /* Input Field overlay */
+        input[type="text"] {
+            width: 100%; padding: 0.75rem 1rem; font-family: var(--font-mono); font-size: 0.85rem;
+            background: transparent; border: none; border-bottom: var(--border-hard);
+            color: var(--text-main); outline: none;
         }
 
-        .timer-display.overflow {
-            color: var(--warning);
+        /* Ledger Panel */
+        .ledger-header {
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: var(--border-hard); background: rgba(0,0,0,0.05);
+            padding: 0.5rem 1rem;
+        }
+        .section-title { 
+            font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; 
+            font-weight: 600; letter-spacing: 0.05em; 
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
+        /* ENV Variable Selector */
+        .env-wrapper { position: relative; font-family: var(--font-mono); font-size: 0.75rem; }
+        .env-trigger {
+            background: var(--text-main); color: var(--bg-color);
+            padding: 0.25rem 0.75rem; cursor: pointer; user-select: none;
+            display: flex; align-items: center; gap: 0.5rem; text-transform: uppercase;
         }
-        .pulse-text { animation: pulse 2s infinite ease-in-out; }
-
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
+        .env-trigger:hover { opacity: 0.8; }
+        .env-dropdown {
+            position: absolute; right: 0; top: 100%; width: 220px;
+            background: var(--panel-bg); border: var(--border-hard);
+            display: none; flex-direction: column; z-index: 100;
         }
-
-        button {
-            padding: 0.75rem;
-            font-family: var(--font-sans);
-            font-size: 0.85rem;
-            font-weight: 500;
-            background: transparent;
-            border: var(--border-strict);
-            color: inherit;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            text-transform: uppercase;
+        .env-dropdown.show { display: flex; }
+        .env-item {
+            padding: 0.5rem 0.75rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: var(--border-soft); text-transform: uppercase;
         }
+        .env-item:last-child { border-bottom: none; }
+        .env-item:hover { background: var(--text-main); color: var(--bg-color); }
+        .env-item.add-btn { color: var(--text-muted); font-style: italic; }
+        .env-item.add-btn:hover { color: var(--bg-color); }
+        .env-delete { color: #B91C1C; font-weight: bold; padding-left: 0.5rem; }
+        .env-item:hover .env-delete { color: #FF6B6B; }
 
-        button:hover {
-            background-color: var(--text-primary);
-            color: var(--bg);
-        }
+        /* Ledger Table */
+        .table-container { padding: 1rem; background: var(--panel-bg); }
+        table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.8rem; }
+        th, td { padding: 0.5rem; text-align: left; border-bottom: var(--border-soft); }
+        th { font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: normal; }
+        tr:last-child td { border-bottom: none; }
+        .tag { border: var(--border-hard); padding: 1px 4px; font-size: 0.7em; }
 
-        .btn-stop { grid-column: 1 / -1; margin-top: 1rem; display: none; }
-        .btn-dynamic { grid-column: 1 / -1; border-style: dashed; display: none; }
-
-        /* Sidebar Log */
-        .side-panel {
-            border-left: var(--border-strict);
-            padding-left: 2rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .event-log {
-            flex-grow: 1;
+        /* Event Log */
+        .event-log-container {
+            border-top: var(--border-hard);
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
             font-family: var(--font-mono);
             font-size: 0.75rem;
-            overflow-y: auto;
-            max-height: 400px;
         }
+        .log-entry { margin-bottom: 0.25rem; }
+        .log-time { color: var(--text-muted); margin-right: 0.5rem; }
+        .warn-msg { color: #D97757; font-weight: bold; }
+        body.work-mode .warn-msg { color: #FF6B6B; }
 
-        .log-entry {
-            margin-bottom: 0.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px dotted rgba(30, 58, 95, 0.3);
-            word-wrap: break-word;
-        }
-
-        .log-time { color: var(--accent); margin-right: 0.5rem;}
-        .sys-msg { color: var(--accent); font-weight: 500; }
-        .warn-msg { color: var(--warning); font-weight: 500; }
-
-        @media (max-width: 768px) {
-            .terminal-container { grid-template-columns: 1fr; }
-            .side-panel { border-left: none; border-top: var(--border-strict); padding-left: 0; padding-top: 2rem; margin-top: 2rem; }
-            .input-group { flex-direction: column; }
-        }
+        @media (max-width: 600px) { .control-grid { grid-template-columns: 1fr; } .cmd-btn:nth-child(even) { border-right: var(--border-hard); } .cmd-btn { border-right: none !important; border-bottom: var(--border-hard) !important; } .cmd-btn:last-child { border-bottom: none !important; } }
     </style>
 </head>
 <body>
 
-    <div class="terminal-container">
-        
-        <!-- MAIN CONTROLS -->
-        <div class="main-panel">
-            <h1>Active Task</h1>
-            <div class="input-group">
-                <select id="env-select" class="env-select">
-                    <option value="Home">Home</option>
-                    <option value="Library">Library</option>
-                    <option value="School">School</option>
-                    <option value="Office">Office</option>
-                    <option value="Cafe">Cafe</option>
-                </select>
-                <input type="text" id="task-input" placeholder="Enter task (e.g., Read Chapter 4)">
-            </div>
-            
-            <div id="status-label" class="mono" style="text-align: center; font-size: 0.85rem; color: var(--accent);">IDLE</div>
-            
-            <div class="audio-toggles">
-                <span style="opacity: 0.5;">AUDIO:</span>
-                <button class="audio-btn active" id="audio-off" onclick="setAudio('OFF')">OFF</button>
-                <button class="audio-btn" id="audio-brown" onclick="setAudio('BROWN')">BROWN NOISE</button>
-                <button class="audio-btn" id="audio-gamma" onclick="setAudio('GAMMA')">40HZ BINAURAL</button>
-            </div>
-
-            <div class="timer-display mono" id="timer">00:00</div>
-            
-            <div class="controls" id="primary-controls">
-                <button onclick="startStandardTimer('DMN Reset', 600)">DMN Reset (10m)</button>
-                <button onclick="startStandardTimer('Meditation', 300)">Meditate (5m)</button>
-                <button onclick="startStandardTimer('Work', 1500)">Work (25m)</button>
-                <button onclick="startStandardTimer('Study', 5400)">Study (90m)</button>
-                <button onclick="startZenMode()">Zen Mode (∞)</button>
-                <button id="dynamic-recovery-btn" class="btn-dynamic" onclick="startCalculatedRecovery()">Initiate Calculated Recovery</button>
-            </div>
-            
-            <button class="btn-stop" id="stop-btn" onclick="stopCurrentBlock()">Conclude Current Block</button>
+    <header>
+        <div>
+            <h1>Seq_Protocol</h1>
+            <div class="mono" style="font-size: 0.75rem; color: var(--text-muted);">Empirical_Input_Terminal_v3.0</div>
         </div>
+        <a href="stats.html" class="nav-link">SYS.OUTPUT_REPORT</a>
+    </header>
 
-        <!-- UTILITY LOG -->
-        <div class="side-panel">
-            <h1>Session Log</h1>
-            <div class="event-log" id="event-log">
-                <div class="log-entry">
-                    <span class="log-time">[System]</span> Terminal initialized.
+    <div class="panel">
+        <div class="controls-header">
+            <span>SYS.CLOCK_FEED</span>
+            <div class="audio-controls">
+                <span style="color: var(--text-muted); margin-right: 0.25rem;">ENTRAINMENT:</span>
+                <button id="audio-off" class="audio-btn active" onclick="setAudioMode('OFF')">OFF</button>
+                <button id="audio-brown" class="audio-btn" onclick="setAudioMode('BROWN')">BROWN</button>
+                <button id="audio-gamma" class="audio-btn" onclick="setAudioMode('GAMMA')">40HZ</button>
+            </div>
+        </div>
+        <input type="text" id="task-input" placeholder="DEFINE: COGNITIVE_TARGET (Optional)">
+        <div class="timer-display" id="timer-display">
+            <div class="time-value" id="time-val">00:00</div>
+            <div class="time-label" id="time-lbl">AWAITING_PROTOCOL_INIT</div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="controls-header">EXECUTE_PROTOCOL</div>
+        <div class="control-grid">
+            <button class="cmd-btn" id="btn-dmn" onclick="startProtocol('DMN Reset', 10)">
+                <div class="btn-title">DMN Reset [10M]</div>
+                <div class="btn-desc">Visual fixation. Down-regulates DMN. Auto-chains to Work.</div>
+            </button>
+            <button class="cmd-btn" id="btn-med" onclick="startProtocol('Meditation', 5)">
+                <div class="btn-title">Meditation [05M]</div>
+                <div class="btn-desc">Breath-anchored. Regulates attention. Auto-chains to Work.</div>
+            </button>
+            <button class="cmd-btn" id="btn-work" onclick="startProtocol('Work', 25)">
+                <div class="btn-title">Work Block [25M]</div>
+                <div class="btn-desc">Standard high-yield cognitive execution phase.</div>
+            </button>
+            <button class="cmd-btn" id="btn-study" onclick="startProtocol('Study', 90)">
+                <div class="btn-title">Study Mode [90M]</div>
+                <div class="btn-desc">Ultradian BRAC cycle. Auto-chains to 20M Recovery limit.</div>
+            </button>
+            <button class="cmd-btn" id="btn-zen" onclick="startProtocol('Zen Mode', null)">
+                <div class="btn-title">Zen Mode [∞]</div>
+                <div class="btn-desc">Temporal blindness. Clock hidden to prevent anxiety.</div>
+            </button>
+            <button class="cmd-btn" id="btn-rec" onclick="startProtocol('Recovery', 20)">
+                <div class="btn-title">Recovery [20M]</div>
+                <div class="btn-desc">Parasympathetic restoration. Disengages cognitive load.</div>
+            </button>
+        </div>
+    </div>
+    
+    <div class="panel">
+        <div class="ledger-header">
+            <div class="section-title">LOCAL_SESSION_LEDGER</div>
+            <div class="env-wrapper">
+                <div class="env-trigger" onclick="toggleEnvMenu(event)">
+                    <span id="current-env-display">[ ENV: HOME ]</span>
+                    <span>▼</span>
                 </div>
+                <div class="env-dropdown" id="env-dropdown"></div>
             </div>
-            <a href="stats.html" class="mono" style="font-size: 0.75rem; text-decoration: none; color: inherit; margin-top: 1rem; border: var(--border-strict); padding: 0.5rem; text-align: center;">View Full Stats &rarr;</a>
         </div>
 
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Env</th>
+                        <th>Protocol</th>
+                        <th>Target</th>
+                        <th>Actual</th>
+                        <th>Ints</th>
+                    </tr>
+                </thead>
+                <tbody id="ledger-body"></tbody>
+            </table>
+        </div>
+        
+        <div class="event-log-container" id="event-log">
+            <div class="log-entry"><span class="log-time">[System]</span> Terminal initialized. Audio context ready.</div>
+        </div>
     </div>
 
     <script>
-        // --- AUDIO ENTRAINMENT ENGINE ---
+        // --- ACOUSTIC ENTRAINMENT (WEB AUDIO API) ---
         let audioCtx;
-        let noiseNode;
-        let oscL, oscR;
-        let currentAudio = 'OFF';
+        let noiseSource;
+        let oscLeft, oscRight;
 
-        function initAudioCtx() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
         }
 
-        function setAudio(mode) {
-            initAudioCtx();
-            if (noiseNode) { noiseNode.stop(); noiseNode.disconnect(); noiseNode = null; }
-            if (oscL) { oscL.stop(); oscL.disconnect(); oscL = null; }
-            if (oscR) { oscR.stop(); oscR.disconnect(); oscR = null; }
+        function setAudioMode(mode) {
+            initAudio();
+            stopAudio();
 
-            document.querySelectorAll('.audio-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('audio-' + mode.toLowerCase()).classList.add('active');
-            currentAudio = mode;
+            // Update UI Toggles
+            document.querySelectorAll('.audio-btn').forEach(btn => btn.classList.remove('active'));
+            if (mode === 'OFF') document.getElementById('audio-off').classList.add('active');
+            if (mode === 'BROWN') document.getElementById('audio-brown').classList.add('active');
+            if (mode === 'GAMMA') document.getElementById('audio-gamma').classList.add('active');
 
             if (mode === 'BROWN') {
-                const bufferSize = audioCtx.sampleRate * 2;
+                // Algorithmic Brown Noise Generation
+                const bufferSize = audioCtx.sampleRate * 2; 
                 const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                 const data = buffer.getChannelData(0);
                 let lastOut = 0;
                 for (let i = 0; i < bufferSize; i++) {
                     const white = Math.random() * 2 - 1;
-                    data[i] = (lastOut + (0.02 * white)) / 1.02;
+                    data[i] = (lastOut + (0.02 * white)) / 1.02; // Simple integration
                     lastOut = data[i];
                     data[i] *= 3.5; // Gain compensation
                 }
-                noiseNode = audioCtx.createBufferSource();
-                noiseNode.buffer = buffer;
-                noiseNode.loop = true;
-                const gain = audioCtx.createGain();
-                gain.gain.value = 0.05;
-                noiseNode.connect(gain).connect(audioCtx.destination);
-                noiseNode.start();
-                appendLog('[Audio] Brown noise matrix active.');
+                noiseSource = audioCtx.createBufferSource();
+                noiseSource.buffer = buffer;
+                noiseSource.loop = true;
+
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.value = 0.08; 
+
+                noiseSource.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                noiseSource.start();
+                appendLog(`[Audio] Brown noise matrix initialized.`);
+
             } else if (mode === 'GAMMA') {
-                const gain = audioCtx.createGain();
-                gain.gain.value = 0.05;
-                
-                oscL = audioCtx.createOscillator(); oscL.type = 'sine'; oscL.frequency.value = 200;
-                const panL = audioCtx.createStereoPanner(); panL.pan.value = -1;
-                oscL.connect(panL).connect(gain);
+                // 40Hz Binaural Beats (200Hz Left, 240Hz Right)
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.value = 0.05; // Keep it subtle to prevent headache
 
-                oscR = audioCtx.createOscillator(); oscR.type = 'sine'; oscR.frequency.value = 240;
-                const panR = audioCtx.createStereoPanner(); panR.pan.value = 1;
-                oscR.connect(panR).connect(gain);
+                oscLeft = audioCtx.createOscillator();
+                oscLeft.type = 'sine';
+                oscLeft.frequency.value = 200;
+                const panLeft = audioCtx.createStereoPanner();
+                panLeft.pan.value = -1;
+                oscLeft.connect(panLeft).connect(gainNode);
 
-                gain.connect(audioCtx.destination);
-                oscL.start(); oscR.start();
-                appendLog('[Audio] 40Hz Gamma entrainment active.');
-            } else {
-                appendLog('[Audio] Entrainment disabled.');
+                oscRight = audioCtx.createOscillator();
+                oscRight.type = 'sine';
+                oscRight.frequency.value = 240;
+                const panRight = audioCtx.createStereoPanner();
+                panRight.pan.value = 1;
+                oscRight.connect(panRight).connect(gainNode);
+
+                gainNode.connect(audioCtx.destination);
+                oscLeft.start();
+                oscRight.start();
+                appendLog(`[Audio] 40Hz Gamma entrainment active (Requires headphones).`);
             }
         }
 
-        // --- TIMER AND LOGIC ---
-        let intervalTracker;
-        let activeState = '';
-        let isZenMode = false;
-        
-        let targetSeconds = 0;
-        let elapsedSeconds = 0;
-        let isOverflowing = false;
-        let pendingRecoverySeconds = 0;
-        
-        let tabSwitches = 0;
+        function stopAudio() {
+            if (noiseSource) { noiseSource.stop(); noiseSource.disconnect(); noiseSource = null; }
+            if (oscLeft) { oscLeft.stop(); oscLeft.disconnect(); oscLeft = null; }
+            if (oscRight) { oscRight.stop(); oscRight.disconnect(); oscRight = null; }
+        }
 
-        // Attentional Tracking
-        document.addEventListener("visibilitychange", () => {
-            if (document.hidden && (activeState === 'Work' || activeState === 'Study')) {
-                tabSwitches++;
-                appendLog(`[Alert] Focus lost. Tab switched. (Total: ${tabSwitches})`, 'warning');
+        // --- ENVIRONMENT VARIABLE LOGIC ---
+        const DEFAULT_ENVS = ['HOME', 'SCHOOL', 'WORK', 'LIBRARY'];
+        let customEnvs = JSON.parse(localStorage.getItem('customEnvs')) || [];
+        let currentEnv = localStorage.getItem('currentEnv') || 'HOME';
+
+        function initEnvMenu() {
+            document.getElementById('current-env-display').innerText = `[ ENV: ${currentEnv} ]`;
+            renderEnvDropdown();
+        }
+
+        function toggleEnvMenu(event) {
+            event.stopPropagation();
+            document.getElementById('env-dropdown').classList.toggle('show');
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.env-wrapper')) {
+                document.getElementById('env-dropdown').classList.remove('show');
             }
         });
 
-        function formatTime() {
+        function selectEnv(env) {
+            currentEnv = env;
+            localStorage.setItem('currentEnv', env);
+            document.getElementById('current-env-display').innerText = `[ ENV: ${env} ]`;
+            document.getElementById('env-dropdown').classList.remove('show');
+        }
+
+        function addCustomEnv(event) {
+            event.stopPropagation();
+            if (customEnvs.length >= 3) {
+                alert("SYS.ERR: Max 3 custom environment variables.");
+                return;
+            }
+            let newTag = prompt("DEFINE NEW ENV_VAR (Max 10 chars):");
+            if (newTag) {
+                newTag = newTag.trim().substring(0, 10).toUpperCase(); 
+                if (newTag && !DEFAULT_ENVS.includes(newTag) && !customEnvs.includes(newTag)) {
+                    customEnvs.push(newTag);
+                    localStorage.setItem('customEnvs', JSON.stringify(customEnvs));
+                    selectEnv(newTag);
+                    renderEnvDropdown();
+                }
+            }
+        }
+
+        function deleteCustomEnv(env, event) {
+            event.stopPropagation();
+            customEnvs = customEnvs.filter(e => e !== env);
+            localStorage.setItem('customEnvs', JSON.stringify(customEnvs));
+            if (currentEnv === env) selectEnv('HOME'); 
+            renderEnvDropdown();
+        }
+
+        function renderEnvDropdown() {
+            const dropdown = document.getElementById('env-dropdown');
+            dropdown.innerHTML = '';
+            
+            DEFAULT_ENVS.forEach(env => {
+                dropdown.innerHTML += `<div class="env-item" onclick="selectEnv('${env}')">${env}</div>`;
+            });
+            customEnvs.forEach(env => {
+                dropdown.innerHTML += `
+                    <div class="env-item">
+                        <span onclick="selectEnv('${env}')" style="flex-grow: 1;">${env}</span>
+                        <span class="env-delete" onclick="deleteCustomEnv('${env}', event)">[X]</span>
+                    </div>
+                `;
+            });
+            if (customEnvs.length < 3) {
+                dropdown.innerHTML += `<div class="env-item add-btn" onclick="addCustomEnv(event)">+ DEFINE_NEW [${3 - customEnvs.length} AVAIL]</div>`;
+            }
+        }
+
+        // --- TIMER & PROTOCOL LOGIC ---
+        let timerInterval;
+        let secondsElapsed = 0;
+        let targetSeconds = 0;
+        let currentMode = null;
+        let isOverflowing = false;
+        let tabSwitchCount = 0;
+        
+        let studySessions = JSON.parse(localStorage.getItem('studySessions')) || [];
+
+        // Attentional Fragmentation Telemetry
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && (currentMode === 'Work' || currentMode === 'Study')) {
+                tabSwitchCount++;
+                appendLog(`[Alert] Focus fragmentation. Tab switch detected. (Interruption count: ${tabSwitchCount})`, 'warning');
+            }
+        });
+
+        function formatTimeLog() {
             const now = new Date();
             return `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}]`;
-        }
-        
-        function formatDuration(totalSeconds) {
-            const m = Math.floor(Math.abs(totalSeconds) / 60);
-            const s = Math.abs(totalSeconds) % 60;
-            return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
         }
 
         function appendLog(message, type = 'normal') {
             const logBox = document.getElementById('event-log');
             const entry = document.createElement('div');
             entry.className = 'log-entry';
-            
-            let msgClass = '';
-            if (type === 'system') msgClass = 'sys-msg';
-            if (type === 'warning') msgClass = 'warn-msg';
-            
-            entry.innerHTML = `<span class="log-time">${formatTime()}</span> <span class="${msgClass}">${message}</span>`;
+            let msgClass = type === 'warning' ? 'warn-msg' : '';
+            entry.innerHTML = `<span class="log-time">${formatTimeLog()}</span> <span class="${msgClass}">${message}</span>`;
             logBox.prepend(entry);
         }
 
-        function saveSessionData() {
-            let sessions = JSON.parse(localStorage.getItem('studySessions')) || [];
-            sessions.push({
-                date: new Date().toISOString(),
-                location: document.getElementById('env-select').value,
-                task: activeState,
-                customTarget: document.getElementById('task-input').value || 'None',
-                audioMode: currentAudio,
-                targetSec: targetSeconds,
-                elapsedSec: elapsedSeconds,
-                interruptions: tabSwitches
-            });
-            localStorage.setItem('studySessions', JSON.stringify(sessions));
+        function formatTime(totalSeconds, hideIfZen = false) {
+            if (hideIfZen && !isOverflowing) return "[ -- : -- ]";
+            const isNegative = totalSeconds < 0;
+            const absSec = Math.abs(totalSeconds);
+            const m = Math.floor(absSec / 60).toString().padStart(2, '0');
+            const s = (absSec % 60).toString().padStart(2, '0');
+            return isNegative ? `+${m}:${s}` : `${m}:${s}`;
         }
 
-        function triggerUIMode(modeName, hideTime = false) {
-            const task = document.getElementById('task-input').value || 'Unspecified target';
-            document.getElementById('status-label').innerText = `${modeName.toUpperCase()} ACTIVE`;
+        function updateDisplay() {
+            const displayObj = document.getElementById('time-val');
+            const labelObj = document.getElementById('time-lbl');
+            const containerObj = document.getElementById('timer-display');
             
-            document.getElementById('primary-controls').style.display = 'none';
-            document.getElementById('dynamic-recovery-btn').style.display = 'none';
-            document.getElementById('stop-btn').style.display = 'block';
+            let timeRemaining = targetSeconds ? targetSeconds - secondsElapsed : secondsElapsed;
+            
+            if (targetSeconds && timeRemaining < 0) {
+                isOverflowing = true;
+                containerObj.classList.add('overflowing');
+                labelObj.innerText = `SYS.OVERFLOW_DETECTED // CLICK TO TERMINATE`;
+                displayObj.innerText = formatTime(timeRemaining);
+            } else {
+                isOverflowing = false;
+                containerObj.classList.remove('overflowing');
+                labelObj.innerText = `EXEC: ${currentMode} // CLICK TO TERMINATE`;
+                displayObj.innerText = formatTime(timeRemaining, currentMode === 'Zen Mode');
+            }
+        }
 
-            if (['Work', 'Study', 'Zen Mode'].includes(modeName)) {
+        function saveBlockData() {
+            let sessionObj = {
+                blocks: [{
+                    blockId: Date.now(),
+                    startTime: new Date().toISOString(),
+                    taskName: currentMode,
+                    environment: currentEnv,
+                    plannedSec: targetSeconds,
+                    durationSec: secondsElapsed,
+                    interruptions: tabSwitchCount
+                }]
+            };
+            studySessions.push(sessionObj);
+            localStorage.setItem('studySessions', JSON.stringify(studySessions));
+            renderLedger();
+        }
+
+        function startProtocol(mode, minutes) {
+            if (currentMode !== null) {
+                stopAndLogProtocol();
+                return;
+            }
+
+            const taskInput = document.getElementById('task-input').value || 'Unspecified';
+            currentMode = mode;
+            targetSeconds = minutes ? minutes * 60 : null;
+            secondsElapsed = 0;
+            isOverflowing = false;
+            tabSwitchCount = 0;
+            
+            document.querySelectorAll('.cmd-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Map button ID
+            let btnId = '';
+            if (mode === 'DMN Reset') btnId = 'btn-dmn';
+            else if (mode === 'Meditation') btnId = 'btn-med';
+            else if (mode === 'Work') btnId = 'btn-work';
+            else if (mode === 'Study') btnId = 'btn-study';
+            else if (mode === 'Zen Mode') btnId = 'btn-zen';
+            else if (mode === 'Recovery') btnId = 'btn-rec';
+            
+            document.getElementById(btnId).classList.add('active');
+
+            if (mode === 'Work' || mode === 'Study' || mode === 'Zen Mode') {
                 document.body.classList.add('work-mode');
             } else {
                 document.body.classList.remove('work-mode');
             }
 
-            appendLog(`Started: ${modeName} -> ${task}`);
+            appendLog(`Initiated ${mode}. Target: ${taskInput}.`);
 
-            if (hideTime) {
-                const display = document.getElementById('timer');
-                display.innerText = "[ - - - ]";
-                display.classList.add('pulse-text');
-            }
-        }
+            const containerObj = document.getElementById('timer-display');
+            containerObj.style.cursor = 'pointer';
+            containerObj.onclick = stopAndLogProtocol;
 
-        function startStandardTimer(mode, seconds) {
-            clearInterval(intervalTracker);
-            activeState = mode;
-            isZenMode = false;
-            targetSeconds = seconds;
-            elapsedSeconds = 0;
-            isOverflowing = false;
-            tabSwitches = 0;
-            
-            triggerUIMode(mode, false);
-            const display = document.getElementById('timer');
-            display.classList.remove('pulse-text', 'overflow');
-            
-            intervalTracker = setInterval(() => {
-                elapsedSeconds++;
-                const remaining = targetSeconds - elapsedSeconds;
-                
-                if (remaining > 0) {
-                    display.innerText = formatDuration(remaining);
-                } else if (remaining === 0) {
-                    display.innerText = "00:00";
-                    saveSessionData();
-                    
-                    if (activeState === 'DMN Reset' || activeState === 'Meditation') {
-                        clearInterval(intervalTracker);
-                        appendLog(`Priming complete. Auto-initiating Work sequence.`, 'system');
-                        startStandardTimer('Work', 1500);
-                        return;
-                    } else if (activeState === 'Study') {
-                        clearInterval(intervalTracker);
-                        appendLog(`Ultradian cycle complete. Initiating mandatory recovery.`, 'system');
-                        startStandardTimer('Recovery', 1200); // 20 min recovery
-                        return;
+            updateDisplay();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                updateDisplay();
+
+                // Auto-Chaining Check
+                if (targetSeconds && secondsElapsed === targetSeconds) {
+                    if (currentMode === 'DMN Reset' || currentMode === 'Meditation') {
+                        saveBlockData();
+                        appendLog(`Priming complete. Auto-chaining to Work [25M].`);
+                        resetUI();
+                        setTimeout(() => startProtocol('Work', 25), 500);
+                    } else if (currentMode === 'Study') {
+                        saveBlockData();
+                        appendLog(`Ultradian block complete. Auto-chaining to mandatory Recovery [20M].`);
+                        resetUI();
+                        setTimeout(() => startProtocol('Recovery', 20), 500);
                     }
-                } else {
-                    if (!isOverflowing) {
-                        isOverflowing = true;
-                        appendLog(`Target duration reached. Overflow tracking initiated.`, 'warning');
-                        document.getElementById('status-label').innerText = `${activeState.toUpperCase()} - OVERFLOW`;
-                        display.classList.add('overflow');
-                    }
-                    display.innerText = `+${formatDuration(Math.abs(remaining))}`;
                 }
             }, 1000);
         }
 
-        function startZenMode() {
-            clearInterval(intervalTracker);
-            activeState = 'Zen Mode';
-            isZenMode = true;
-            elapsedSeconds = 0;
-            tabSwitches = 0;
+        function stopAndLogProtocol() {
+            clearInterval(timerInterval);
             
-            triggerUIMode('Zen Mode', true);
-            intervalTracker = setInterval(() => elapsedSeconds++, 1000);
-        }
-        
-        function startCalculatedRecovery() {
-            startStandardTimer('Recovery', pendingRecoverySeconds);
-        }
-
-        function stopCurrentBlock() {
-            clearInterval(intervalTracker);
-            if (elapsedSeconds > 5) saveSessionData();
-
-            if (isZenMode) {
-                const m = Math.floor(elapsedSeconds / 60);
-                const s = elapsedSeconds % 60;
-                appendLog(`Concluded: Zen Mode (Duration: ${m}m ${s}s)`);
-                
-                pendingRecoverySeconds = Math.floor(elapsedSeconds / 5);
-                const r_m = Math.floor(pendingRecoverySeconds / 60);
-                const r_s = pendingRecoverySeconds % 60;
-                appendLog(`Calculation: Required recovery period is ${r_m}m ${r_s}s.`, 'system');
-                
-            } else {
+            if (secondsElapsed > 5) {
+                saveBlockData();
+                const over_m = Math.floor(Math.abs(targetSeconds - secondsElapsed) / 60);
                 if (isOverflowing) {
-                    const over_m = Math.floor(Math.abs(targetSeconds - elapsedSeconds) / 60);
-                    const over_s = Math.abs(targetSeconds - elapsedSeconds) % 60;
-                    appendLog(`Concluded: ${activeState} (Includes ${over_m}m ${over_s}s overflow)`, 'warning');
+                    appendLog(`Concluded: ${currentMode}. Recorded overflow variance.`, 'warning');
                 } else {
-                    appendLog(`Concluded: ${activeState}`);
+                    appendLog(`Concluded: ${currentMode}. Data committed to ledger.`);
                 }
+            } else {
+                appendLog(`Aborted: ${currentMode}. Minimum duration not met.`);
             }
+
             resetUI();
         }
 
         function resetUI() {
-            document.getElementById('timer').innerText = "00:00";
-            document.getElementById('timer').classList.remove('pulse-text', 'overflow');
-            document.getElementById('status-label').innerText = "IDLE";
+            currentMode = null;
+            targetSeconds = 0;
+            secondsElapsed = 0;
+            isOverflowing = false;
+            tabSwitchCount = 0;
             
-            document.getElementById('primary-controls').style.display = 'grid';
-            document.getElementById('stop-btn').style.display = 'none';
+            const containerObj = document.getElementById('timer-display');
+            containerObj.style.cursor = 'default';
+            containerObj.onclick = null;
+            containerObj.classList.remove('overflowing');
+            document.getElementById('time-val').innerText = "00:00";
+            document.getElementById('time-lbl').innerText = "AWAITING_PROTOCOL_INIT";
+            
             document.body.classList.remove('work-mode');
-            
-            if (isZenMode && pendingRecoverySeconds > 0) {
-                const btn = document.getElementById('dynamic-recovery-btn');
-                const m = Math.floor(pendingRecoverySeconds / 60);
-                const s = pendingRecoverySeconds % 60;
-                btn.innerText = `Initiate Calculated Recovery (${m}m ${s}s)`;
-                btn.style.display = 'block';
-            } else {
-                document.getElementById('dynamic-recovery-btn').style.display = 'none';
-            }
-            activeState = ''; isZenMode = false; isOverflowing = false; tabSwitches = 0;
+            document.querySelectorAll('.cmd-btn').forEach(btn => btn.classList.remove('active'));
         }
 
-        // Restore saved location choice
-        window.onload = () => {
-            const savedLoc = localStorage.getItem('defaultLocation');
-            if(savedLoc) document.getElementById('env-select').value = savedLoc;
-            document.getElementById('env-select').addEventListener('change', (e) => {
-                localStorage.setItem('defaultLocation', e.target.value);
+        function renderLedger() {
+            const tbody = document.getElementById('ledger-body');
+            tbody.innerHTML = '';
+            
+            let allBlocks = [];
+            studySessions.forEach(session => {
+                if (session.blocks) allBlocks.push(...session.blocks);
+            });
+
+            allBlocks.reverse().forEach(block => {
+                const targetMins = block.plannedSec ? Math.floor(block.plannedSec / 60) : '∞';
+                const actualMins = Math.floor(block.durationSec / 60);
+                const env = block.environment || 'UNKNOWN';
+                const ints = block.interruptions || 0;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="tag">${env}</span></td>
+                        <td>${block.taskName}</td>
+                        <td>${targetMins}M</td>
+                        <td>${actualMins}M</td>
+                        <td style="color: ${ints > 0 ? '#D97757' : 'inherit'}">${ints}</td>
+                    </tr>
+                `;
             });
         }
+
+        window.onload = () => {
+            initEnvMenu();
+            renderLedger();
+        };
+
     </script>
 </body>
 </html>
