@@ -3,28 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Focus Terminal - Empirical Input</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>Protocol Terminal - Empirical Input</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #F5F5F7;
-            --surface: #FFFFFF;
-            --text-primary: #1E3A5F;
-            --text-muted: #6B7C93;
-            --accent: #4A9B9B;
-            --warning: #D97757;
-            --border-soft: 1px solid rgba(30, 58, 95, 0.1);
+            /* Clinical Laboratory Palette */
+            --bg-color: #EBEBEB;
+            --panel-bg: #F5F5F5;
+            --text-main: #111111;
+            --text-muted: #666666;
+            --border-hard: 1px solid #111111;
+            --border-soft: 1px solid #CCCCCC;
+            --highlight: #111111;
+            --warning-bg: #333333;
+            --warning-text: #FFFFFF;
             --font-sans: 'Inter', sans-serif;
             --font-mono: 'Roboto Mono', monospace;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            border-radius: 0 !important; /* Strict no-round policy */
+        }
 
         body {
             font-family: var(--font-sans);
-            background-color: var(--bg);
-            color: var(--text-primary);
-            line-height: 1.6;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
             padding: 2rem;
             max-width: 900px;
             margin: 0 auto;
@@ -34,130 +42,169 @@
 
         /* Header */
         header {
-            display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;
+            display: flex; justify-content: space-between; align-items: flex-end; 
+            border-bottom: var(--border-hard);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
         }
-        h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
-        .nav-link { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color 0.2s ease; }
-        .nav-link:hover { color: var(--accent); }
+        h1 { font-size: 1.25rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .nav-link { 
+            font-family: var(--font-mono); font-size: 0.85rem; font-weight: 500; 
+            color: var(--text-main); text-decoration: none; 
+            border: var(--border-hard); padding: 0.25rem 0.75rem;
+            background: var(--bg-color);
+            transition: all 0.1s;
+        }
+        .nav-link:hover { background: var(--text-main); color: var(--bg-color); }
 
-        /* Main Display */
+        /* Main Display Panel */
+        .panel {
+            background-color: var(--panel-bg);
+            border: var(--border-hard);
+            margin-bottom: 2rem;
+        }
+
         .timer-display {
-            background-color: var(--surface); border-radius: 24px; padding: 3rem 2rem;
-            border: var(--border-soft); text-align: center; margin-bottom: 1.5rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            padding: 4rem 2rem;
+            text-align: center;
         }
-        .time-value { font-family: var(--font-mono); font-size: 5rem; font-weight: 400; color: var(--text-primary); line-height: 1; margin-bottom: 0.5rem; }
-        .time-value.overflow { color: var(--warning); }
-        .time-label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+        .time-value { 
+            font-family: var(--font-mono); font-size: 6rem; font-weight: 400; 
+            color: var(--text-main); line-height: 1; margin-bottom: 1rem; letter-spacing: -0.02em;
+        }
+        .time-value.overflow { color: var(--warning-text); }
+        .time-label { 
+            font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); 
+            text-transform: uppercase; letter-spacing: 0.1em; 
+        }
+        .timer-display.overflowing {
+            background-color: var(--warning-bg);
+            color: var(--warning-text);
+        }
+        .timer-display.overflowing .time-label { color: #AAAAAA; }
 
-        /* Control Grid */
-        .bento-grid {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem;
+        /* Control Grid Panel */
+        .controls-header {
+            font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase;
+            padding: 0.5rem 1rem; border-bottom: var(--border-hard);
+            background: #E0E0E0; letter-spacing: 0.05em;
         }
-        .bento-btn {
-            background-color: var(--surface); border: var(--border-soft); border-radius: 16px;
-            padding: 1.5rem; cursor: pointer; transition: all 0.2s ease; text-align: left;
-            display: flex; flex-direction: column; justify-content: space-between; min-height: 100px;
+        .control-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
         }
-        .bento-btn:hover { border-color: var(--accent); background: rgba(74, 155, 155, 0.02); }
-        .bento-btn.active { border-color: var(--warning); background: rgba(217, 119, 87, 0.05); }
+        .cmd-btn {
+            background-color: transparent; border: none; border-right: var(--border-hard);
+            padding: 1.5rem 1rem; cursor: pointer; transition: all 0.1s; text-align: left;
+            display: flex; flex-direction: column; justify-content: flex-start;
+        }
+        .cmd-btn:last-child { border-right: none; }
+        .cmd-btn:hover { background: #E0E0E0; }
+        .cmd-btn.active { background: var(--text-main); color: var(--bg-color); }
+        .cmd-btn.active .btn-desc { color: #AAAAAA; }
         
-        .btn-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; }
-        .btn-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.3; }
+        .btn-title { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase; }
+        .btn-desc { font-family: var(--font-sans); font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; }
 
-        /* Ledger and Environment Selector */
-        .ledger-section {
-            background-color: var(--surface); border-radius: 24px; padding: 1.5rem;
-            border: var(--border-soft); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-        }
+        /* Ledger Panel */
         .ledger-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: var(--border-hard); background: #E0E0E0;
+            padding: 0.5rem 1rem;
         }
-        .section-title { font-size: 0.75rem; text-transform: uppercase; font-weight: 600; color: var(--text-muted); letter-spacing: 0.05em; }
+        .section-title { 
+            font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; 
+            font-weight: 600; letter-spacing: 0.05em; 
+        }
 
-        /* Custom Dropdown for ENV_VAR */
+        /* ENV Variable Selector - Console Style */
         .env-wrapper { position: relative; font-family: var(--font-mono); font-size: 0.75rem; }
         .env-trigger {
-            background: var(--bg); border: 1px dashed var(--accent); color: var(--accent);
-            padding: 0.5rem 0.75rem; border-radius: 8px; cursor: pointer; user-select: none;
-            display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;
+            background: var(--text-main); color: var(--bg-color);
+            padding: 0.25rem 0.75rem; cursor: pointer; user-select: none;
+            display: flex; align-items: center; gap: 0.5rem; text-transform: uppercase;
         }
-        .env-trigger:hover { background: rgba(74, 155, 155, 0.1); }
+        .env-trigger:hover { background: #333333; }
         .env-dropdown {
-            position: absolute; right: 0; top: calc(100% + 0.5rem); width: 200px;
-            background: var(--surface); border: var(--border-soft); border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; flex-direction: column; z-index: 100;
-            overflow: hidden;
+            position: absolute; right: 0; top: 100%; width: 220px;
+            background: var(--panel-bg); border: var(--border-hard);
+            display: none; flex-direction: column; z-index: 100;
         }
         .env-dropdown.show { display: flex; }
         .env-item {
-            padding: 0.75rem 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid rgba(30,58,95,0.05); transition: background 0.2s;
+            padding: 0.5rem 0.75rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: var(--border-soft); text-transform: uppercase;
         }
-        .env-item:hover { background: rgba(74, 155, 155, 0.05); color: var(--accent); }
-        .env-divider { height: 1px; background: rgba(30,58,95,0.1); }
+        .env-item:last-child { border-bottom: none; }
+        .env-item:hover { background: var(--text-main); color: var(--bg-color); }
         .env-item.add-btn { color: var(--text-muted); font-style: italic; }
-        .env-item.add-btn:hover { color: var(--text-primary); }
-        .env-delete { color: var(--warning); font-size: 1rem; line-height: 1; padding-left: 0.5rem; opacity: 0.5; }
-        .env-delete:hover { opacity: 1; }
+        .env-item.add-btn:hover { color: var(--bg-color); }
+        .env-delete { color: #B91C1C; font-weight: bold; padding-left: 0.5rem; }
+        .env-item:hover .env-delete { color: #FF6B6B; }
 
-        /* Table */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.85rem; }
-        th, td { padding: 0.75rem 0; text-align: left; border-bottom: 1px solid rgba(30, 58, 95, 0.05); }
-        th { font-family: var(--font-sans); text-transform: uppercase; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+        /* Ledger Table */
+        .table-container { padding: 1rem; background: var(--panel-bg); }
+        table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.8rem; }
+        th, td { padding: 0.5rem; text-align: left; border-bottom: var(--border-soft); }
+        th { font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: normal; }
         tr:last-child td { border-bottom: none; }
-        .tag { font-size: 0.7em; border: 1px solid var(--text-muted); padding: 2px 6px; border-radius: 4px; margin-right: 0.5rem; }
+        .tag { border: var(--border-hard); padding: 1px 4px; font-size: 0.7em; }
 
-        @media (max-width: 600px) { .bento-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .control-grid { grid-template-columns: repeat(2, 1fr); } .cmd-btn:nth-child(2) { border-right: none; } .cmd-btn:nth-child(1), .cmd-btn:nth-child(2) { border-bottom: var(--border-hard); } }
+        @media (max-width: 480px) { .control-grid { grid-template-columns: 1fr; } .cmd-btn { border-right: none; border-bottom: var(--border-hard); } }
     </style>
 </head>
 <body>
 
     <header>
         <div>
-            <h1>Focus Terminal</h1>
-            <div class="mono" style="font-size: 0.85rem; color: var(--text-muted);">Empirical Input Module</div>
+            <h1>Seq_Protocol</h1>
+            <div class="mono" style="font-size: 0.75rem; color: var(--text-muted);">Empirical_Input_Terminal_v2.1</div>
         </div>
-        <a href="stats.html" class="nav-link">Output Report &rarr;</a>
+        <a href="stats.html" class="nav-link">SYS.OUTPUT_REPORT</a>
     </header>
 
-    <!-- Main Timer Display -->
-    <div class="timer-display" id="timer-display">
-        <div class="time-value" id="time-val">00:00</div>
-        <div class="time-label" id="time-lbl">Awaiting Protocol Initialization</div>
+    <!-- Main Timer Panel -->
+    <div class="panel">
+        <div class="controls-header">SYS.CLOCK_FEED</div>
+        <div class="timer-display" id="timer-display">
+            <div class="time-value" id="time-val">00:00</div>
+            <div class="time-label" id="time-lbl">AWAITING_PROTOCOL_INIT</div>
+        </div>
     </div>
 
-    <!-- Protocol Controls -->
-    <div class="bento-grid">
-        <button class="bento-btn" id="btn-dmn" onclick="startProtocol('DMN Reset', 10)">
-            <div class="btn-title">DMN Reset (10m)</div>
-            <div class="btn-desc">Visual fixation to down-regulate the Default Mode Network. Auto-triggers Work block upon completion.</div>
-        </button>
-        <button class="bento-btn" id="btn-med" onclick="startProtocol('Meditation', 5)">
-            <div class="btn-title">Meditation (5m)</div>
-            <div class="btn-desc">Breath-anchored attention regulation. Auto-triggers Work block upon completion.</div>
-        </button>
-        <button class="bento-btn" id="btn-work" onclick="startProtocol('Work', 25)">
-            <div class="btn-title">Work Block (25m)</div>
-            <div class="btn-desc">Standard high-yield cognitive execution phase.</div>
-        </button>
-        <button class="bento-btn" id="btn-zen" onclick="startProtocol('Zen Mode', null)">
-            <div class="btn-title">Zen Mode (∞)</div>
-            <div class="btn-desc">Temporal blindness. Time is hidden to prevent clock-watching anxiety.</div>
-        </button>
+    <!-- Control Grid Panel -->
+    <div class="panel">
+        <div class="controls-header">EXECUTE_PROTOCOL</div>
+        <div class="control-grid">
+            <button class="cmd-btn" id="btn-dmn" onclick="startProtocol('DMN Reset', 10)">
+                <div class="btn-title">DMN Reset [10M]</div>
+                <div class="btn-desc">Visual fixation. Down-regulates DMN. Auto-chains to Work.</div>
+            </button>
+            <button class="cmd-btn" id="btn-med" onclick="startProtocol('Meditation', 5)">
+                <div class="btn-title">Meditation [05M]</div>
+                <div class="btn-desc">Breath-anchored. Regulates attention. Auto-chains to Work.</div>
+            </button>
+            <button class="cmd-btn" id="btn-work" onclick="startProtocol('Work', 25)">
+                <div class="btn-title">Work Block [25M]</div>
+                <div class="btn-desc">Standard high-yield cognitive execution phase.</div>
+            </button>
+            <button class="cmd-btn" id="btn-zen" onclick="startProtocol('Zen Mode', null)">
+                <div class="btn-title">Zen Mode [∞]</div>
+                <div class="btn-desc">Temporal blindness. Clock hidden to prevent anxiety.</div>
+            </button>
+        </div>
     </div>
     
-    <!-- Ledger Container with ENV_VAR integration -->
-    <div class="ledger-section">
+    <!-- Ledger Panel -->
+    <div class="panel">
         <div class="ledger-header">
-            <div class="section-title">Local Session Ledger</div>
+            <div class="section-title">LOCAL_SESSION_LEDGER</div>
             
             <!-- Custom Environment Dropdown -->
             <div class="env-wrapper">
                 <div class="env-trigger" onclick="toggleEnvMenu(event)">
-                    <span id="current-env-display">ENV_VAR: Home</span>
-                    <span>▾</span>
+                    <span id="current-env-display">[ ENV_VAR: HOME ]</span>
+                    <span>▼</span>
                 </div>
                 <div class="env-dropdown" id="env-dropdown">
                     <!-- Populated by JS -->
@@ -184,12 +231,12 @@
 
     <script>
         // --- ENVIRONMENT VARIABLE LOGIC ---
-        const DEFAULT_ENVS = ['Home', 'School', 'Work', 'Library'];
+        const DEFAULT_ENVS = ['HOME', 'SCHOOL', 'WORK', 'LIBRARY'];
         let customEnvs = JSON.parse(localStorage.getItem('customEnvs')) || [];
-        let currentEnv = localStorage.getItem('currentEnv') || 'Home';
+        let currentEnv = localStorage.getItem('currentEnv') || 'HOME';
 
         function initEnvMenu() {
-            document.getElementById('current-env-display').innerText = `ENV_VAR: ${currentEnv}`;
+            document.getElementById('current-env-display').innerText = `[ ENV: ${currentEnv} ]`;
             renderEnvDropdown();
         }
 
@@ -198,7 +245,6 @@
             document.getElementById('env-dropdown').classList.toggle('show');
         }
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.env-wrapper')) {
                 document.getElementById('env-dropdown').classList.remove('show');
@@ -208,19 +254,19 @@
         function selectEnv(env) {
             currentEnv = env;
             localStorage.setItem('currentEnv', env);
-            document.getElementById('current-env-display').innerText = `ENV_VAR: ${env}`;
+            document.getElementById('current-env-display').innerText = `[ ENV: ${env} ]`;
             document.getElementById('env-dropdown').classList.remove('show');
         }
 
         function addCustomEnv(event) {
             event.stopPropagation();
             if (customEnvs.length >= 3) {
-                alert("Terminal limit reached: Maximum 3 custom variables.");
+                alert("SYS.ERR: Max 3 custom environment variables.");
                 return;
             }
-            let newTag = prompt("Enter new environment variable (max 12 characters):");
+            let newTag = prompt("DEFINE NEW ENV_VAR (Max 10 chars):");
             if (newTag) {
-                newTag = newTag.trim().substring(0, 12).toUpperCase(); // Force uppercase for terminal aesthetic
+                newTag = newTag.trim().substring(0, 10).toUpperCase(); 
                 if (newTag && !DEFAULT_ENVS.includes(newTag) && !customEnvs.includes(newTag)) {
                     customEnvs.push(newTag);
                     localStorage.setItem('customEnvs', JSON.stringify(customEnvs));
@@ -235,7 +281,7 @@
             customEnvs = customEnvs.filter(e => e !== env);
             localStorage.setItem('customEnvs', JSON.stringify(customEnvs));
             if (currentEnv === env) {
-                selectEnv('Home'); // Fallback if current tag is deleted
+                selectEnv('HOME'); 
             }
             renderEnvDropdown();
         }
@@ -244,26 +290,21 @@
             const dropdown = document.getElementById('env-dropdown');
             dropdown.innerHTML = '';
             
-            // Render Defaults
             DEFAULT_ENVS.forEach(env => {
                 dropdown.innerHTML += `<div class="env-item" onclick="selectEnv('${env}')">${env}</div>`;
             });
 
-            dropdown.innerHTML += `<div class="env-divider"></div>`;
-
-            // Render Customs
             customEnvs.forEach(env => {
                 dropdown.innerHTML += `
                     <div class="env-item">
                         <span onclick="selectEnv('${env}')" style="flex-grow: 1;">${env}</span>
-                        <span class="env-delete" onclick="deleteCustomEnv('${env}', event)">×</span>
+                        <span class="env-delete" onclick="deleteCustomEnv('${env}', event)">[X]</span>
                     </div>
                 `;
             });
 
-            // Render Add Button (if room)
             if (customEnvs.length < 3) {
-                dropdown.innerHTML += `<div class="env-item add-btn" onclick="addCustomEnv(event)">+ Add Custom [${3 - customEnvs.length} left]</div>`;
+                dropdown.innerHTML += `<div class="env-item add-btn" onclick="addCustomEnv(event)">+ DEFINE_NEW [${3 - customEnvs.length} AVAIL]</div>`;
             }
         }
 
@@ -274,11 +315,10 @@
         let currentMode = null;
         let isOverflowing = false;
         
-        // Sessions array strictly tracks actual output
         let studySessions = JSON.parse(localStorage.getItem('studySessions')) || [];
 
         function formatTime(totalSeconds, hideIfZen = false) {
-            if (hideIfZen && !isOverflowing) return "[ - - - ]";
+            if (hideIfZen && !isOverflowing) return "[ -- : -- ]";
             
             const isNegative = totalSeconds < 0;
             const absSec = Math.abs(totalSeconds);
@@ -290,24 +330,24 @@
         function updateDisplay() {
             const displayObj = document.getElementById('time-val');
             const labelObj = document.getElementById('time-lbl');
+            const containerObj = document.getElementById('timer-display');
             
             let timeRemaining = targetSeconds ? targetSeconds - secondsElapsed : secondsElapsed;
             
             if (targetSeconds && timeRemaining < 0) {
                 isOverflowing = true;
-                displayObj.classList.add('overflow');
-                labelObj.innerText = `OVERFLOW AUDIT REQUIRED. CLICK TO TERMINATE AND LOG.`;
+                containerObj.classList.add('overflowing');
+                labelObj.innerText = `SYS.OVERFLOW_DETECTED // CLICK TO TERMINATE`;
                 displayObj.innerText = formatTime(timeRemaining);
             } else {
                 isOverflowing = false;
-                displayObj.classList.remove('overflow');
-                labelObj.innerText = `PROTOCOL: ${currentMode} | CLICK TO TERMINATE`;
+                containerObj.classList.remove('overflowing');
+                labelObj.innerText = `EXEC: ${currentMode} // CLICK TO TERMINATE`;
                 displayObj.innerText = formatTime(timeRemaining, currentMode === 'Zen Mode');
             }
         }
 
         function startProtocol(mode, minutes) {
-            // If clicking a running protocol, stop it.
             if (currentMode !== null) {
                 stopAndLogProtocol();
                 return;
@@ -318,16 +358,11 @@
             secondsElapsed = 0;
             isOverflowing = false;
             
-            // Visual feedback
-            document.querySelectorAll('.bento-btn').forEach(btn => btn.style.opacity = '0.5');
-            document.getElementById(mode === 'DMN Reset' ? 'btn-dmn' : 
-                                  mode === 'Meditation' ? 'btn-med' : 
-                                  mode === 'Zen Mode' ? 'btn-zen' : 'btn-work').style.opacity = '1';
+            document.querySelectorAll('.cmd-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(mode === 'DMN Reset' ? 'btn-dmn' : 
                                   mode === 'Meditation' ? 'btn-med' : 
                                   mode === 'Zen Mode' ? 'btn-zen' : 'btn-work').classList.add('active');
 
-            // Set up click-to-stop on the display
             document.getElementById('timer-display').style.cursor = 'pointer';
             document.getElementById('timer-display').onclick = stopAndLogProtocol;
 
@@ -342,12 +377,10 @@
         function stopAndLogProtocol() {
             clearInterval(timerInterval);
             
-            // Prevent logging accidental double-clicks (< 5 seconds)
             if (secondsElapsed > 5) {
                 logSession();
             }
 
-            // Auto-chain logic: If finishing a priming sequence, trigger Work block.
             let nextMode = null;
             if (currentMode === 'DMN Reset' || currentMode === 'Meditation') {
                 if (!isOverflowing && secondsElapsed >= (targetSeconds - 5)) {
@@ -363,13 +396,12 @@
         }
 
         function logSession() {
-            // Find or create today's session wrapper
             let sessionObj = {
                 blocks: [{
                     blockId: Date.now(),
                     startTime: new Date().toISOString(),
                     taskName: currentMode,
-                    environment: currentEnv, // <--- ENVIRONMENT DATA INJECTED HERE
+                    environment: currentEnv,
                     plannedSec: targetSeconds,
                     durationSec: secondsElapsed
                 }]
@@ -385,16 +417,14 @@
             targetSeconds = 0;
             secondsElapsed = 0;
             isOverflowing = false;
-            document.getElementById('timer-display').style.cursor = 'default';
-            document.getElementById('timer-display').onclick = null;
-            document.getElementById('time-val').classList.remove('overflow');
+            const containerObj = document.getElementById('timer-display');
+            containerObj.style.cursor = 'default';
+            containerObj.onclick = null;
+            containerObj.classList.remove('overflowing');
             document.getElementById('time-val').innerText = "00:00";
-            document.getElementById('time-lbl').innerText = "Awaiting Protocol Initialization";
+            document.getElementById('time-lbl').innerText = "AWAITING_PROTOCOL_INIT";
             
-            document.querySelectorAll('.bento-btn').forEach(btn => {
-                btn.style.opacity = '1';
-                btn.classList.remove('active');
-            });
+            document.querySelectorAll('.cmd-btn').forEach(btn => btn.classList.remove('active'));
         }
 
         function renderLedger() {
@@ -406,24 +436,22 @@
                 if (session.blocks) allBlocks.push(...session.blocks);
             });
 
-            // Show newest top
             allBlocks.reverse().forEach(block => {
                 const targetMins = block.plannedSec ? Math.floor(block.plannedSec / 60) : '∞';
                 const actualMins = Math.floor(block.durationSec / 60);
-                const env = block.environment || 'N/A'; // Support older data
+                const env = block.environment || 'UNKNOWN';
 
                 tbody.innerHTML += `
                     <tr>
                         <td><span class="tag">${env}</span></td>
                         <td>${block.taskName}</td>
-                        <td>${targetMins}m</td>
-                        <td>${actualMins}m</td>
+                        <td>${targetMins}M</td>
+                        <td>${actualMins}M</td>
                     </tr>
                 `;
             });
         }
 
-        // Initialize App
         window.onload = () => {
             initEnvMenu();
             renderLedger();
