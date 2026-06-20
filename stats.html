@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Focus Terminal</title>
+    <title>Stats - Focus Terminal</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -16,16 +16,6 @@
             --font-mono: 'Roboto Mono', monospace;
         }
 
-        body.work-mode {
-            background-color: #000000;
-            color: #F5F5F7;
-        }
-        body.work-mode .terminal-container { border-color: #333; }
-        body.work-mode button, body.work-mode select { border-color: #F5F5F7; color: #F5F5F7; }
-        body.work-mode button:hover { background-color: #F5F5F7; color: #000000; }
-        body.work-mode input, body.work-mode .event-log, body.work-mode .audio-toggles { border-color: #333; }
-        body.work-mode .log-entry { border-bottom-color: rgba(245, 245, 247, 0.3); }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
@@ -33,477 +23,215 @@
             background-color: var(--bg);
             color: var(--text-primary);
             line-height: 1.6;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 1rem;
-        }
-
-        .terminal-container {
-            width: 100%;
-            max-width: 800px;
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 2rem;
             padding: 2rem;
-            border: var(--border-strict);
-            background: transparent;
+            max-width: 1000px;
+            margin: 0 auto;
         }
-
-        .main-panel { display: flex; flex-direction: column; position: relative; }
 
         h1 {
-            font-size: 1rem;
+            font-size: 1.25rem;
             text-transform: uppercase;
             font-weight: 600;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             border-bottom: var(--border-strict);
             padding-bottom: 0.5rem;
             display: flex;
             justify-content: space-between;
-            align-items: center;
         }
 
         .mono { font-family: var(--font-mono); }
-
-        .input-group {
-            display: flex; gap: 1rem; margin-bottom: 2rem;
-        }
-
-        input[type="text"] {
-            flex-grow: 1;
-            padding: 0.75rem;
-            font-family: var(--font-mono);
-            font-size: 1rem;
-            background: transparent;
-            border: var(--border-strict);
-            color: inherit;
-            outline: none;
-        }
-
-        select.env-select {
-            padding: 0.75rem;
-            font-family: var(--font-mono);
+        
+        .nav-link {
             font-size: 0.85rem;
-            background: transparent;
-            border: var(--border-strict);
-            color: inherit;
-            outline: none;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-        body.work-mode select.env-select option { background: #000; color: #FFF; }
-
-        .audio-toggles {
-            display: flex; justify-content: center; gap: 1rem; margin-top: -1rem; margin-bottom: 1rem;
-            font-family: var(--font-mono); font-size: 0.75rem;
-        }
-        .audio-btn {
-            background: transparent; border: none; padding: 0.25rem 0.5rem; cursor: pointer; color: inherit; opacity: 0.5; border-bottom: 1px solid transparent;
-        }
-        .audio-btn.active { opacity: 1; border-bottom: 1px solid var(--accent); color: var(--accent); }
-
-        .timer-display {
-            font-size: 5rem;
-            font-weight: 400;
-            text-align: center;
-            margin: 1rem 0 2rem 0;
-            letter-spacing: -0.05em;
-            font-variant-numeric: tabular-nums;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: color 0.3s ease;
+            text-decoration: none;
+            color: var(--accent);
         }
 
-        .timer-display.overflow {
-            color: var(--warning);
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
-        }
-        .pulse-text { animation: pulse 2s infinite ease-in-out; }
-
-        .controls {
+        .metrics-container {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
         }
 
-        button {
-            padding: 0.75rem;
-            font-family: var(--font-sans);
-            font-size: 0.85rem;
-            font-weight: 500;
-            background: transparent;
+        .metric-box {
             border: var(--border-strict);
-            color: inherit;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            text-transform: uppercase;
+            padding: 1.5rem;
+            text-align: center;
         }
 
-        button:hover {
-            background-color: var(--text-primary);
-            color: var(--bg);
-        }
-
-        .btn-stop { grid-column: 1 / -1; margin-top: 1rem; display: none; }
-        .btn-dynamic { grid-column: 1 / -1; border-style: dashed; display: none; }
-
-        /* Sidebar Log */
-        .side-panel {
-            border-left: var(--border-strict);
-            padding-left: 2rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .event-log {
-            flex-grow: 1;
-            font-family: var(--font-mono);
+        .metric-title {
             font-size: 0.75rem;
-            overflow-y: auto;
-            max-height: 400px;
-        }
-
-        .log-entry {
+            text-transform: uppercase;
             margin-bottom: 0.5rem;
-            padding-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-family: var(--font-mono);
+            font-size: 2.5rem;
+            color: var(--accent);
+        }
+
+        h2 {
+            font-size: 1rem;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .table-container {
+            border: var(--border-strict);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
             border-bottom: 1px dotted rgba(30, 58, 95, 0.3);
-            word-wrap: break-word;
         }
 
-        .log-time { color: var(--accent); margin-right: 0.5rem;}
-        .sys-msg { color: var(--accent); font-weight: 500; }
-        .warn-msg { color: var(--warning); font-weight: 500; }
-
-        @media (max-width: 768px) {
-            .terminal-container { grid-template-columns: 1fr; }
-            .side-panel { border-left: none; border-top: var(--border-strict); padding-left: 0; padding-top: 2rem; margin-top: 2rem; }
-            .input-group { flex-direction: column; }
+        th {
+            background-color: rgba(30, 58, 95, 0.05);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-family: var(--font-sans);
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
         }
+
+        tr:last-child td { border-bottom: none; }
+
+        .tag {
+            background-color: rgba(74, 155, 155, 0.1);
+            color: var(--accent);
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+        }
+        
+        .warning-text { color: var(--warning); font-weight: 600; }
+
     </style>
 </head>
 <body>
 
-    <div class="terminal-container">
-        
-        <!-- MAIN CONTROLS -->
-        <div class="main-panel">
-            <h1>Active Task</h1>
-            <div class="input-group">
-                <select id="env-select" class="env-select">
-                    <option value="Home">Home</option>
-                    <option value="Library">Library</option>
-                    <option value="School">School</option>
-                    <option value="Office">Office</option>
-                    <option value="Cafe">Cafe</option>
-                </select>
-                <input type="text" id="task-input" placeholder="Enter task (e.g., Read Chapter 4)">
-            </div>
-            
-            <div id="status-label" class="mono" style="text-align: center; font-size: 0.85rem; color: var(--accent);">IDLE</div>
-            
-            <div class="audio-toggles">
-                <span style="opacity: 0.5;">AUDIO:</span>
-                <button class="audio-btn active" id="audio-off" onclick="setAudio('OFF')">OFF</button>
-                <button class="audio-btn" id="audio-brown" onclick="setAudio('BROWN')">BROWN NOISE</button>
-                <button class="audio-btn" id="audio-gamma" onclick="setAudio('GAMMA')">40HZ BINAURAL</button>
-            </div>
+    <h1>
+        <span>Session Data Ledger</span>
+        <a href="index.html" class="nav-link mono">&larr; Back to Terminal</a>
+    </h1>
 
-            <div class="timer-display mono" id="timer">00:00</div>
-            
-            <div class="controls" id="primary-controls">
-                <button onclick="startStandardTimer('DMN Reset', 600)">DMN Reset (10m)</button>
-                <button onclick="startStandardTimer('Meditation', 300)">Meditate (5m)</button>
-                <button onclick="startStandardTimer('Work', 1500)">Work (25m)</button>
-                <button onclick="startStandardTimer('Study', 5400)">Study (90m)</button>
-                <button onclick="startZenMode()">Zen Mode (∞)</button>
-                <button id="dynamic-recovery-btn" class="btn-dynamic" onclick="startCalculatedRecovery()">Initiate Calculated Recovery</button>
-            </div>
-            
-            <button class="btn-stop" id="stop-btn" onclick="stopCurrentBlock()">Conclude Current Block</button>
+    <div class="metrics-container">
+        <div class="metric-box">
+            <div class="metric-title">Total Active Load</div>
+            <div class="metric-value" id="total-time">0h 0m</div>
         </div>
-
-        <!-- UTILITY LOG -->
-        <div class="side-panel">
-            <h1>Session Log</h1>
-            <div class="event-log" id="event-log">
-                <div class="log-entry">
-                    <span class="log-time">[System]</span> Terminal initialized.
-                </div>
-            </div>
-            <a href="stats.html" class="mono" style="font-size: 0.75rem; text-decoration: none; color: inherit; margin-top: 1rem; border: var(--border-strict); padding: 0.5rem; text-align: center;">View Full Stats &rarr;</a>
+        <div class="metric-box">
+            <div class="metric-title">Deep Work Blocks</div>
+            <div class="metric-value" id="work-blocks">0</div>
         </div>
-
+        <div class="metric-box">
+            <div class="metric-title">Attentional Breaches</div>
+            <div class="metric-value warning-text" id="total-ints">0</div>
+        </div>
     </div>
 
+    <h2>Raw Session Log</h2>
+    <div class="table-container">
+        <table id="session-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Loc / Env</th>
+                    <th>Protocol</th>
+                    <th>Target Goal</th>
+                    <th>Audio</th>
+                    <th>Target Time</th>
+                    <th>Actual Time</th>
+                    <th>Ints</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <button onclick="clearData()" style="margin-top: 2rem; padding: 0.5rem 1rem; font-family: var(--font-mono); font-size: 0.75rem; background: transparent; border: 1px solid var(--warning); color: var(--warning); cursor: pointer; text-transform: uppercase;">Purge Database</button>
+
     <script>
-        // --- AUDIO ENTRAINMENT ENGINE ---
-        let audioCtx;
-        let noiseNode;
-        let oscL, oscR;
-        let currentAudio = 'OFF';
-
-        function initAudioCtx() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }
-
-        function setAudio(mode) {
-            initAudioCtx();
-            if (noiseNode) { noiseNode.stop(); noiseNode.disconnect(); noiseNode = null; }
-            if (oscL) { oscL.stop(); oscL.disconnect(); oscL = null; }
-            if (oscR) { oscR.stop(); oscR.disconnect(); oscR = null; }
-
-            document.querySelectorAll('.audio-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('audio-' + mode.toLowerCase()).classList.add('active');
-            currentAudio = mode;
-
-            if (mode === 'BROWN') {
-                const bufferSize = audioCtx.sampleRate * 2;
-                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                const data = buffer.getChannelData(0);
-                let lastOut = 0;
-                for (let i = 0; i < bufferSize; i++) {
-                    const white = Math.random() * 2 - 1;
-                    data[i] = (lastOut + (0.02 * white)) / 1.02;
-                    lastOut = data[i];
-                    data[i] *= 3.5; // Gain compensation
-                }
-                noiseNode = audioCtx.createBufferSource();
-                noiseNode.buffer = buffer;
-                noiseNode.loop = true;
-                const gain = audioCtx.createGain();
-                gain.gain.value = 0.05;
-                noiseNode.connect(gain).connect(audioCtx.destination);
-                noiseNode.start();
-                appendLog('[Audio] Brown noise matrix active.');
-            } else if (mode === 'GAMMA') {
-                const gain = audioCtx.createGain();
-                gain.gain.value = 0.05;
-                
-                oscL = audioCtx.createOscillator(); oscL.type = 'sine'; oscL.frequency.value = 200;
-                const panL = audioCtx.createStereoPanner(); panL.pan.value = -1;
-                oscL.connect(panL).connect(gain);
-
-                oscR = audioCtx.createOscillator(); oscR.type = 'sine'; oscR.frequency.value = 240;
-                const panR = audioCtx.createStereoPanner(); panR.pan.value = 1;
-                oscR.connect(panR).connect(gain);
-
-                gain.connect(audioCtx.destination);
-                oscL.start(); oscR.start();
-                appendLog('[Audio] 40Hz Gamma entrainment active.');
-            } else {
-                appendLog('[Audio] Entrainment disabled.');
-            }
-        }
-
-        // --- TIMER AND LOGIC ---
-        let intervalTracker;
-        let activeState = '';
-        let isZenMode = false;
-        
-        let targetSeconds = 0;
-        let elapsedSeconds = 0;
-        let isOverflowing = false;
-        let pendingRecoverySeconds = 0;
-        
-        let tabSwitches = 0;
-
-        // Attentional Tracking
-        document.addEventListener("visibilitychange", () => {
-            if (document.hidden && (activeState === 'Work' || activeState === 'Study')) {
-                tabSwitches++;
-                appendLog(`[Alert] Focus lost. Tab switched. (Total: ${tabSwitches})`, 'warning');
-            }
-        });
-
-        function formatTime() {
-            const now = new Date();
-            return `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}]`;
-        }
-        
         function formatDuration(totalSeconds) {
-            const m = Math.floor(Math.abs(totalSeconds) / 60);
-            const s = Math.abs(totalSeconds) % 60;
-            return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            if (h > 0) return `${h}h ${m}m`;
+            return `${m}m`;
         }
 
-        function appendLog(message, type = 'normal') {
-            const logBox = document.getElementById('event-log');
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
+        function loadStats() {
+            const sessions = JSON.parse(localStorage.getItem('studySessions')) || [];
+            const tbody = document.querySelector('#session-table tbody');
             
-            let msgClass = '';
-            if (type === 'system') msgClass = 'sys-msg';
-            if (type === 'warning') msgClass = 'warn-msg';
-            
-            entry.innerHTML = `<span class="log-time">${formatTime()}</span> <span class="${msgClass}">${message}</span>`;
-            logBox.prepend(entry);
-        }
+            let totalLoadSec = 0;
+            let workCount = 0;
+            let intCount = 0;
 
-        function saveSessionData() {
-            let sessions = JSON.parse(localStorage.getItem('studySessions')) || [];
-            sessions.push({
-                date: new Date().toISOString(),
-                location: document.getElementById('env-select').value,
-                task: activeState,
-                customTarget: document.getElementById('task-input').value || 'None',
-                audioMode: currentAudio,
-                targetSec: targetSeconds,
-                elapsedSec: elapsedSeconds,
-                interruptions: tabSwitches
-            });
-            localStorage.setItem('studySessions', JSON.stringify(sessions));
-        }
-
-        function triggerUIMode(modeName, hideTime = false) {
-            const task = document.getElementById('task-input').value || 'Unspecified target';
-            document.getElementById('status-label').innerText = `${modeName.toUpperCase()} ACTIVE`;
-            
-            document.getElementById('primary-controls').style.display = 'none';
-            document.getElementById('dynamic-recovery-btn').style.display = 'none';
-            document.getElementById('stop-btn').style.display = 'block';
-
-            if (['Work', 'Study', 'Zen Mode'].includes(modeName)) {
-                document.body.classList.add('work-mode');
-            } else {
-                document.body.classList.remove('work-mode');
+            if (sessions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; opacity: 0.5;">No data logged yet.</td></tr>';
+                return;
             }
 
-            appendLog(`Started: ${modeName} -> ${task}`);
-
-            if (hideTime) {
-                const display = document.getElementById('timer');
-                display.innerText = "[ - - - ]";
-                display.classList.add('pulse-text');
-            }
-        }
-
-        function startStandardTimer(mode, seconds) {
-            clearInterval(intervalTracker);
-            activeState = mode;
-            isZenMode = false;
-            targetSeconds = seconds;
-            elapsedSeconds = 0;
-            isOverflowing = false;
-            tabSwitches = 0;
-            
-            triggerUIMode(mode, false);
-            const display = document.getElementById('timer');
-            display.classList.remove('pulse-text', 'overflow');
-            
-            intervalTracker = setInterval(() => {
-                elapsedSeconds++;
-                const remaining = targetSeconds - elapsedSeconds;
+            sessions.slice().reverse().forEach(session => {
+                // Formatting metrics
+                const dateObj = new Date(session.date);
+                const dateStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${dateObj.getHours().toString().padStart(2,'0')}:${dateObj.getMinutes().toString().padStart(2,'0')}`;
                 
-                if (remaining > 0) {
-                    display.innerText = formatDuration(remaining);
-                } else if (remaining === 0) {
-                    display.innerText = "00:00";
-                    saveSessionData();
-                    
-                    if (activeState === 'DMN Reset' || activeState === 'Meditation') {
-                        clearInterval(intervalTracker);
-                        appendLog(`Priming complete. Auto-initiating Work sequence.`, 'system');
-                        startStandardTimer('Work', 1500);
-                        return;
-                    } else if (activeState === 'Study') {
-                        clearInterval(intervalTracker);
-                        appendLog(`Ultradian cycle complete. Initiating mandatory recovery.`, 'system');
-                        startStandardTimer('Recovery', 1200); // 20 min recovery
-                        return;
-                    }
-                } else {
-                    if (!isOverflowing) {
-                        isOverflowing = true;
-                        appendLog(`Target duration reached. Overflow tracking initiated.`, 'warning');
-                        document.getElementById('status-label').innerText = `${activeState.toUpperCase()} - OVERFLOW`;
-                        display.classList.add('overflow');
-                    }
-                    display.innerText = `+${formatDuration(Math.abs(remaining))}`;
+                const isWork = ['Work', 'Study', 'Zen Mode'].includes(session.task);
+                if (isWork) {
+                    totalLoadSec += session.elapsedSec;
+                    workCount++;
+                    intCount += session.interruptions || 0;
                 }
-            }, 1000);
-        }
 
-        function startZenMode() {
-            clearInterval(intervalTracker);
-            activeState = 'Zen Mode';
-            isZenMode = true;
-            elapsedSeconds = 0;
-            tabSwitches = 0;
-            
-            triggerUIMode('Zen Mode', true);
-            intervalTracker = setInterval(() => elapsedSeconds++, 1000);
-        }
-        
-        function startCalculatedRecovery() {
-            startStandardTimer('Recovery', pendingRecoverySeconds);
-        }
-
-        function stopCurrentBlock() {
-            clearInterval(intervalTracker);
-            if (elapsedSeconds > 5) saveSessionData();
-
-            if (isZenMode) {
-                const m = Math.floor(elapsedSeconds / 60);
-                const s = elapsedSeconds % 60;
-                appendLog(`Concluded: Zen Mode (Duration: ${m}m ${s}s)`);
+                const targetStr = session.targetSec ? Math.floor(session.targetSec/60) + 'm' : '∞';
+                const actualStr = Math.floor(session.elapsedSec/60) + 'm';
                 
-                pendingRecoverySeconds = Math.floor(elapsedSeconds / 5);
-                const r_m = Math.floor(pendingRecoverySeconds / 60);
-                const r_s = pendingRecoverySeconds % 60;
-                appendLog(`Calculation: Required recovery period is ${r_m}m ${r_s}s.`, 'system');
-                
-            } else {
-                if (isOverflowing) {
-                    const over_m = Math.floor(Math.abs(targetSeconds - elapsedSeconds) / 60);
-                    const over_s = Math.abs(targetSeconds - elapsedSeconds) % 60;
-                    appendLog(`Concluded: ${activeState} (Includes ${over_m}m ${over_s}s overflow)`, 'warning');
-                } else {
-                    appendLog(`Concluded: ${activeState}`);
-                }
-            }
-            resetUI();
-        }
+                const ints = session.interruptions || 0;
+                const intDisplay = ints > 0 ? `<span class="warning-text">${ints}</span>` : '0';
 
-        function resetUI() {
-            document.getElementById('timer').innerText = "00:00";
-            document.getElementById('timer').classList.remove('pulse-text', 'overflow');
-            document.getElementById('status-label').innerText = "IDLE";
-            
-            document.getElementById('primary-controls').style.display = 'grid';
-            document.getElementById('stop-btn').style.display = 'none';
-            document.body.classList.remove('work-mode');
-            
-            if (isZenMode && pendingRecoverySeconds > 0) {
-                const btn = document.getElementById('dynamic-recovery-btn');
-                const m = Math.floor(pendingRecoverySeconds / 60);
-                const s = pendingRecoverySeconds % 60;
-                btn.innerText = `Initiate Calculated Recovery (${m}m ${s}s)`;
-                btn.style.display = 'block';
-            } else {
-                document.getElementById('dynamic-recovery-btn').style.display = 'none';
-            }
-            activeState = ''; isZenMode = false; isOverflowing = false; tabSwitches = 0;
-        }
-
-        // Restore saved location choice
-        window.onload = () => {
-            const savedLoc = localStorage.getItem('defaultLocation');
-            if(savedLoc) document.getElementById('env-select').value = savedLoc;
-            document.getElementById('env-select').addEventListener('change', (e) => {
-                localStorage.setItem('defaultLocation', e.target.value);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="opacity: 0.7;">${dateStr}</td>
+                    <td><span class="tag">${session.location}</span></td>
+                    <td style="font-weight: 500;">${session.task}</td>
+                    <td style="opacity: 0.8;">${session.customTarget}</td>
+                    <td>${session.audioMode}</td>
+                    <td>${targetStr}</td>
+                    <td>${actualStr}</td>
+                    <td>${intDisplay}</td>
+                `;
+                tbody.appendChild(tr);
             });
+
+            document.getElementById('total-time').innerText = formatDuration(totalLoadSec);
+            document.getElementById('work-blocks').innerText = workCount;
+            document.getElementById('total-ints').innerText = intCount;
         }
+
+        function clearData() {
+            if(confirm("Delete all session history?")) {
+                localStorage.removeItem('studySessions');
+                location.reload();
+            }
+        }
+
+        window.onload = loadStats;
     </script>
 </body>
 </html>
