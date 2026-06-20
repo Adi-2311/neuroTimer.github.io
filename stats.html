@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Focus Terminal - Output Report</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>Output Report - Focus Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #F5F5F7;
-            --surface: #FFFFFF;
             --text-primary: #1E3A5F;
-            --text-muted: #6B7C93;
             --accent: #4A9B9B;
             --warning: #D97757;
-            --border-soft: 1px solid rgba(30, 58, 95, 0.1);
+            --border-strict: 1px solid #1E3A5F;
+            --border-light: 1px solid rgba(30, 58, 95, 0.2);
             --font-sans: 'Inter', sans-serif;
             --font-mono: 'Roboto Mono', monospace;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            border-radius: 0 !important; 
+        }
 
         body {
             font-family: var(--font-sans);
@@ -26,7 +30,7 @@
             color: var(--text-primary);
             line-height: 1.6;
             padding: 2rem;
-            max-width: 1100px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
@@ -34,408 +38,341 @@
 
         /* Header */
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
+            display: flex; justify-content: space-between; align-items: flex-end; 
+            border-bottom: var(--border-strict);
+            padding-bottom: 1rem;
             margin-bottom: 2rem;
         }
-
-        h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
-        
-        .nav-link {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: color 0.2s ease;
+        h1 { font-size: 1.25rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;}
+        .nav-link { 
+            font-family: var(--font-mono); font-size: 0.85rem; font-weight: 500; 
+            color: var(--text-primary); text-decoration: none; 
+            border: var(--border-strict); padding: 0.35rem 0.75rem;
+            background: transparent;
+            text-transform: uppercase;
+            transition: all 0.15s ease;
         }
-        .nav-link:hover { color: var(--accent); }
+        .nav-link:hover { background: var(--text-primary); color: var(--bg); }
 
-        /* Testing Controls */
-        .test-controls { margin-bottom: 2rem; display: flex; gap: 1rem; }
-        .test-controls button {
-            font-family: var(--font-mono); font-size: 0.75rem; padding: 0.5rem 1rem;
-            background: transparent; border: 1px dashed var(--accent); color: var(--accent); 
-            border-radius: 8px; cursor: pointer; transition: all 0.2s;
-        }
-        .test-controls button:hover { background: rgba(74, 155, 155, 0.1); }
-
-        /* Clinical Bento Grid System */
-        .bento-grid {
+        /* Grid Layout */
+        .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
-        .bento-card {
-            background-color: var(--surface);
-            border-radius: 24px;
+        /* Metric Cards */
+        .metric-card {
+            border: var(--border-strict);
             padding: 1.5rem;
-            border: var(--border-soft);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
             display: flex;
             flex-direction: column;
+            justify-content: center;
+            background: transparent;
         }
-
-        .span-2 { grid-column: span 2; }
-        .span-3 { grid-column: span 3; }
-
-        @media (max-width: 800px) {
-            .bento-grid { grid-template-columns: 1fr; }
-            .span-2, .span-3 { grid-column: span 1; }
-        }
-
-        /* Typography inside Cards */
-        .card-title {
+        .metric-title {
+            font-family: var(--font-mono);
             font-size: 0.75rem;
             text-transform: uppercase;
-            font-weight: 600;
-            color: var(--text-muted);
+            color: var(--accent);
             margin-bottom: 0.5rem;
             letter-spacing: 0.05em;
         }
-
-        .card-desc {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-            line-height: 1.4;
-            flex-grow: 1;
-        }
-
-        .metric-value {
+        .metric-val {
             font-family: var(--font-mono);
             font-size: 2.5rem;
             font-weight: 400;
-            color: var(--text-primary);
             line-height: 1;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.05em;
         }
-
         .metric-sub {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .math-symbol { color: var(--accent); font-style: italic; margin-right: 0.25rem; font-size: 1.5rem; }
-        
-        /* The "Not Enough Data" Status */
-        .awaiting-data {
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            background: var(--bg);
-            padding: 0.75rem;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px dashed rgba(30, 58, 95, 0.2);
-            margin-top: auto;
-        }
-
-        /* Ledger Table inside Bento Card */
-        .table-container {
-            overflow-x: auto;
-            margin-top: 1rem;
-        }
-
-        table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.85rem; }
-        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid rgba(30, 58, 95, 0.05); }
-        th { font-family: var(--font-sans); text-transform: uppercase; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: rgba(74, 155, 155, 0.03); }
-        
-        .cell-overflow { color: var(--warning); font-weight: 500; }
-        .tag-primed { color: var(--accent); font-size: 0.7em; margin-left: 0.5rem; border: 1px solid var(--accent); padding: 2px 6px; border-radius: 4px; }
-        
-        /* Danger Button */
-        .btn-danger {
-            margin-top: 2rem;
-            padding: 0.75rem 1.5rem;
-            background: transparent;
-            border: 1px dashed var(--warning);
-            color: var(--warning);
-            font-family: var(--font-mono);
             font-size: 0.75rem;
-            text-transform: uppercase;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .btn-danger:hover {
-            background: rgba(217, 119, 87, 0.1);
+            color: var(--text-primary);
+            opacity: 0.7;
+            margin-top: 0.5rem;
         }
 
+        /* Wide Panels */
+        .panel {
+            border: var(--border-strict);
+            margin-bottom: 2rem;
+        }
+        .panel-header {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            padding: 0.5rem 1rem;
+            border-bottom: var(--border-strict);
+            background: rgba(74, 155, 155, 0.1);
+            font-weight: 600;
+        }
+        .panel-body { padding: 1.5rem; }
+
+        /* Environment Analysis Bars */
+        .env-row {
+            display: flex; align-items: center; margin-bottom: 1rem;
+        }
+        .env-row:last-child { margin-bottom: 0; }
+        .env-label {
+            width: 120px; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase;
+        }
+        .env-bar-container {
+            flex-grow: 1; height: 12px; background: rgba(30, 58, 95, 0.1); border: var(--border-light);
+            margin: 0 1rem; position: relative;
+        }
+        .env-bar-fill {
+            height: 100%; background: var(--accent);
+        }
+        .env-stats {
+            width: 150px; font-family: var(--font-mono); font-size: 0.75rem; text-align: right;
+        }
+
+        /* Ledger Table */
+        table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.8rem; }
+        th, td { padding: 0.75rem 0.5rem; text-align: left; border-bottom: var(--border-light); }
+        th { text-transform: uppercase; color: var(--accent); font-weight: normal; border-bottom: var(--border-strict); }
+        tr:last-child td { border-bottom: none; }
+        
+        .tag-env { border: 1px dashed var(--accent); padding: 2px 6px; font-size: 0.7em; color: var(--accent); }
+        .cqi-high { color: var(--accent); }
+        .cqi-low { color: var(--warning); }
+
+        /* Utility */
+        .btn-danger {
+            background: transparent; color: var(--warning); border: 1px solid var(--warning);
+            padding: 0.5rem 1rem; font-family: var(--font-mono); font-size: 0.75rem; cursor: pointer;
+            text-transform: uppercase; display: block; width: 100%; margin-top: 2rem;
+            transition: all 0.2s;
+        }
+        .btn-danger:hover { background: var(--warning); color: var(--bg); }
+
+        @media (max-width: 768px) { 
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .env-stats { width: auto; }
+        }
     </style>
 </head>
 <body>
 
     <header>
         <div>
-            <h1>Cognitive Output Report</h1>
-            <div class="mono" style="font-size: 0.85rem; color: var(--text-muted);">Subject: Local User | Empirical Synthesis</div>
+            <h1>SYS.OUTPUT_REPORT</h1>
+            <div class="mono" style="font-size: 0.75rem; color: var(--accent);">Diagnostic_Telemetry_v3.0</div>
         </div>
-        <a href="index.html" class="nav-link">&larr; Return to Terminal</a>
+        <a href="index.html" class="nav-link">&larr; Return to Input</a>
     </header>
 
-    <div class="test-controls">
-        <button onclick="renderDashboard(sparseData)">[Inject Sparse Data (n < 10)]</button>
-        <button onclick="renderDashboard(richData)">[Inject Rich Data (n > 10)]</button>
-    </div>
-
-    <div class="bento-grid">
-        <div class="bento-card">
-            <div class="card-title">Sample Size (n)</div>
-            <div class="metric-value" id="val-cycles">--</div>
-            <div class="metric-sub"><span>Total Recorded Blocks</span></div>
+    <div class="dashboard-grid">
+        <div class="metric-card">
+            <div class="metric-title">Cognitive Quality Index (CQI)</div>
+            <div class="metric-val" id="val-cqi">--%</div>
+            <div class="metric-sub">Based on attentional stability (tab switches).</div>
         </div>
-        <div class="bento-card">
-            <div class="card-title">Cumulative Work</div>
-            <div class="metric-value" id="val-work">--</div>
-            <div class="metric-sub"><span>Minutes Output</span></div>
+        <div class="metric-card">
+            <div class="metric-title">Total Active Load</div>
+            <div class="metric-val" id="val-time">0h 0m</div>
+            <div class="metric-sub">Time spent in Work, Study, or Zen mode.</div>
         </div>
-        <div class="bento-card">
-            <div class="card-title">Cumulative Rest</div>
-            <div class="metric-value" id="val-rest">--</div>
-            <div class="metric-sub"><span>Minutes Recovered</span></div>
+        <div class="metric-card">
+            <div class="metric-title">Fragmentation Events</div>
+            <div class="metric-val" style="color: var(--warning);" id="val-frag">0</div>
+            <div class="metric-sub">Total context-switching breaches detected.</div>
         </div>
     </div>
 
-    <div class="bento-grid">
-        
-        <div class="bento-card">
-            <div class="card-title">Protocol Adherence Variance</div>
-            <div class="card-desc">Standard deviation (σ) of block overflow. A lower variance indicates higher cognitive discipline.</div>
-            <div id="container-pav">
-                </div>
-        </div>
-
-        <div class="bento-card">
-            <div class="card-title">Priming Yield Index</div>
-            <div class="card-desc">Compares output of Work blocks preceded by a DMN/Meditate sequence versus "Cold" blocks.</div>
-            <div id="container-pyi">
-                </div>
-        </div>
-
-        <div class="bento-card">
-            <div class="card-title">Homeostatic Recovery Deficit</div>
-            <div class="card-desc">Evaluates rest vs. work against the 1:5 Zen baseline. Negative numbers indicate fatigue.</div>
-            <div id="container-hrd">
-                </div>
-        </div>
-
-    </div>
-
-    <div class="bento-grid">
-        <div class="bento-card span-3">
-            <div class="card-title">Immutable Session Ledger</div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Date</th>
-                            <th>Mode</th>
-                            <th>Target</th>
-                            <th>Actual Output</th>
-                            <th>Variance</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ledger-body">
-                        </tbody>
-                </table>
-            </div>
+    <div class="panel">
+        <div class="panel-header">ENVIRONMENTAL EFFICACY ANALYSIS</div>
+        <div class="panel-body" id="env-analysis-container">
+            <!-- Populated by JS -->
         </div>
     </div>
 
-    <button class="btn-danger" onclick="wipeAllData()">[ Purge Local Data ]</button>
+    <div class="panel">
+        <div class="panel-header">RAW SESSION LEDGER</div>
+        <div class="panel-body" style="padding: 0;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Environment</th>
+                        <th>Protocol</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>CQI / Ints</th>
+                    </tr>
+                </thead>
+                <tbody id="ledger-body">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <button class="btn-danger" onclick="clearData()">Purge Local Database</button>
 
     <script>
-        // --- REAL LOCAL DATA FETCH ---
-        let userSessions = JSON.parse(localStorage.getItem('studySessions')) || [];
+        function formatDuration(totalSeconds) {
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            if (h > 0) return `${h}h ${m}m`;
+            return `${m}m`;
+        }
 
-        // Note: The structure of userSessions from index.html looks a bit different than our simulated data.
-        // We map the raw blocks from index.html into a flat array of block objects that match our stats schema.
-        function parseRealData() {
-            let parsedData = [];
-            userSessions.forEach(session => {
-                if (session.blocks && session.blocks.length > 0) {
-                    let primedStatus = false;
-                    session.blocks.forEach((block, index) => {
-                        // Check if this block was preceded by a priming block
-                        if (index > 0 && (session.blocks[index-1].taskName === 'DMN Reset' || session.blocks[index-1].taskName === 'Meditation')) {
-                            primedStatus = true;
-                        }
+        function calculateCQI(interruptions) {
+            // CQI Formula: Start at 100, lose 15 points per interruption
+            let score = 100 - (interruptions * 15);
+            return score < 0 ? 0 : score;
+        }
 
-                        // Determine target vs actual
-                        let targetMins = 0;
-                        if (block.taskName === 'Work') targetMins = 25;
-                        else if (block.taskName === 'DMN Reset') targetMins = 10;
-                        else if (block.taskName === 'Meditation') targetMins = 5;
-                        else if (block.taskName === 'Zen Mode') targetMins = '∞';
-                        else if (block.taskName === 'Recovery') targetMins = Math.floor((block.plannedSec || 0) / 60);
+        function renderDashboard() {
+            const rawData = JSON.parse(localStorage.getItem('studySessions')) || [];
+            let allBlocks = [];
+            rawData.forEach(session => {
+                if (session.blocks) allBlocks.push(...session.blocks);
+            });
 
-                        let actualMins = Math.floor((block.durationSec || 0) / 60);
-                        let overflow = 0;
-                        
-                        if (targetMins !== '∞') {
-                            overflow = actualMins - targetMins;
-                        }
+            // 1. Calculate Global Metrics
+            let totalLoadSec = 0;
+            let totalFrags = 0;
+            let cqiSum = 0;
+            let workBlockCount = 0;
+            let envData = {}; // To group by environment
 
-                        parsedData.push({
-                            id: block.blockId.toString().slice(-6), // Use last 6 digits of timestamp as ID
-                            date: new Date(block.startTime).toLocaleDateString(),
-                            mode: block.taskName || 'Focus',
-                            target: targetMins,
-                            actual: actualMins,
-                            overflow: overflow,
-                            primed: primedStatus
-                        });
-                        
-                        // Reset primed status for the next iteration
-                        primedStatus = false; 
-                    });
+            allBlocks.forEach(block => {
+                const isWorkState = ['Work', 'Study', 'Zen Mode'].includes(block.taskName);
+                const ints = block.interruptions || 0;
+                const env = block.environment || 'UNKNOWN';
+
+                // Ensure env exists in our aggregator
+                if (!envData[env]) {
+                    envData[env] = { timeSec: 0, ints: 0, workBlocks: 0, cqiSum: 0 };
+                }
+
+                // Add time to environment total
+                envData[env].timeSec += block.durationSec;
+
+                if (isWorkState) {
+                    totalLoadSec += block.durationSec;
+                    totalFrags += ints;
+                    workBlockCount++;
+                    
+                    const blockCQI = calculateCQI(ints);
+                    cqiSum += blockCQI;
+
+                    // Add to environment stats
+                    envData[env].workBlocks++;
+                    envData[env].ints += ints;
+                    envData[env].cqiSum += blockCQI;
                 }
             });
-            return parsedData;
-        }
 
-        // --- SIMULATED DATA SETS (For Testing Buttons) ---
-        const sparseData = [
-            { id: '001', date: '2023-10-25', mode: 'Work', target: 25, actual: 25, overflow: 0, primed: false },
-            { id: '002', date: '2023-10-25', mode: 'Meditation', target: 5, actual: 5, overflow: 0, primed: false },
-            { id: '003', date: '2023-10-25', mode: 'Work', target: 25, actual: 28, overflow: 3, primed: true }
-        ];
-
-        const richData = [
-            { id: '015', date: '2023-10-28', mode: 'Work', target: 25, actual: 26, overflow: 1, primed: true },
-            { id: '014', date: '2023-10-28', mode: 'DMN Reset', target: 10, actual: 10, overflow: 0, primed: false },
-            { id: '013', date: '2023-10-27', mode: 'Work', target: 25, actual: 35, overflow: 10, primed: false },
-            { id: '012', date: '2023-10-27', mode: 'Recovery', target: 5, actual: 3, overflow: -2, primed: false },
-            { id: '011', date: '2023-10-27', mode: 'Zen Mode', target: '∞', actual: 45, overflow: 0, primed: false },
-            { id: '010', date: '2023-10-26', mode: 'Work', target: 25, actual: 25, overflow: 0, primed: true },
-            { id: '009', date: '2023-10-26', mode: 'Meditation', target: 5, actual: 5, overflow: 0, primed: false },
-            { id: '008', date: '2023-10-26', mode: 'Work', target: 25, actual: 40, overflow: 15, primed: false },
-            { id: '007', date: '2023-10-26', mode: 'Recovery', target: 8, actual: 4, overflow: -4, primed: false },
-            { id: '006', date: '2023-10-26', mode: 'Work', target: 25, actual: 27, overflow: 2, primed: true },
-            { id: '005', date: '2023-10-26', mode: 'DMN Reset', target: 10, actual: 10, overflow: 0, primed: false },
-            { id: '004', date: '2023-10-25', mode: 'Work', target: 25, actual: 30, overflow: 5, primed: false },
-            { id: '003', date: '2023-10-25', mode: 'Work', target: 25, actual: 25, overflow: 0, primed: true },
-            { id: '002', date: '2023-10-25', mode: 'Meditation', target: 5, actual: 5, overflow: 0, primed: false },
-            { id: '001', date: '2023-10-25', mode: 'Work', target: 25, actual: 32, overflow: 7, primed: false }
-        ];
-
-        // --- MATH ENGINE ---
-        function calculateStandardDeviation(arr) {
-            if (arr.length === 0) return 0;
-            const mean = arr.reduce((acc, val) => acc + val, 0) / arr.length;
-            const variance = arr.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / arr.length;
-            return Math.sqrt(variance);
-        }
-
-        function renderDashboard(data) {
+            // Update Metric Cards
+            document.getElementById('val-time').innerText = formatDuration(totalLoadSec);
+            document.getElementById('val-frag').innerText = totalFrags;
             
-            // 1. Raw Telemetry
-            const totalBlocks = data.length;
-            const totalWorkMins = data.filter(d => d.mode === 'Work' || d.mode === 'Zen Mode').reduce((acc, d) => acc + d.actual, 0);
-            const totalRestMins = data.filter(d => d.mode === 'Recovery' || d.mode === 'Meditation' || d.mode === 'DMN Reset').reduce((acc, d) => acc + d.actual, 0);
-            const workBlocks = data.filter(d => d.mode === 'Work');
-            const workCount = workBlocks.length;
-
-            document.getElementById('val-cycles').innerText = totalBlocks;
-            document.getElementById('val-work').innerText = `${totalWorkMins}m`;
-            document.getElementById('val-rest').innerText = `${totalRestMins}m`;
-
-            // 2. Protocol Adherence Variance (PAV) -> Threshold: 10 Work Blocks
-            const pavContainer = document.getElementById('container-pav');
-            if (workCount >= 10) {
-                const stdDev = calculateStandardDeviation(workBlocks.map(d => d.overflow));
-                pavContainer.innerHTML = `<div class="metric-value"><span class="math-symbol">σ =</span> ±${stdDev.toFixed(1)}m</div>`;
-            } else {
-                pavContainer.innerHTML = `<div class="awaiting-data">Awaiting Data (n=${workCount}/10 Work)</div>`;
+            if (workBlockCount > 0) {
+                const avgCQI = Math.round(cqiSum / workBlockCount);
+                const cqiEl = document.getElementById('val-cqi');
+                cqiEl.innerText = `${avgCQI}%`;
+                if (avgCQI < 70) cqiEl.style.color = 'var(--warning)';
             }
 
-            // 3. Priming Yield Index (PYI) -> Threshold: 5 Primed / 5 Cold
-            const primedWorks = workBlocks.filter(d => d.primed);
-            const coldWorks = workBlocks.filter(d => !d.primed);
-            const pyiContainer = document.getElementById('container-pyi');
+            // 2. Render Environment Analysis
+            const envContainer = document.getElementById('env-analysis-container');
+            envContainer.innerHTML = '';
             
-            if (primedWorks.length >= 5 && coldWorks.length >= 5) {
-                const avgPrimed = primedWorks.reduce((acc, d) => acc + d.actual, 0) / primedWorks.length;
-                const avgCold = coldWorks.reduce((acc, d) => acc + d.actual, 0) / coldWorks.length;
-                const yieldPercent = ((avgPrimed - avgCold) / avgCold) * 100;
-                
-                const color = yieldPercent > 0 ? "var(--accent)" : "var(--warning)";
-                pyiContainer.innerHTML = `<div class="metric-value" style="color: ${color};"><span class="math-symbol">Δ =</span> ${yieldPercent > 0 ? '+' : ''}${yieldPercent.toFixed(1)}%</div>`;
+            // Find max time for progress bar scaling
+            let maxTime = 0;
+            Object.values(envData).forEach(d => { if (d.timeSec > maxTime) maxTime = d.timeSec; });
+
+            if (Object.keys(envData).length === 0) {
+                envContainer.innerHTML = `<div class="mono" style="font-size: 0.85rem; opacity: 0.5;">No environmental data logged.</div>`;
             } else {
-                const currentStatus = Math.min(primedWorks.length, coldWorks.length);
-                pyiContainer.innerHTML = `<div class="awaiting-data">Awaiting Data (n=${currentStatus}/5 Pairs)</div>`;
+                // Sort environments by total time descending
+                const sortedEnvs = Object.keys(envData).sort((a, b) => envData[b].timeSec - envData[a].timeSec);
+
+                sortedEnvs.forEach(env => {
+                    const data = envData[env];
+                    const widthPct = maxTime > 0 ? (data.timeSec / maxTime) * 100 : 0;
+                    const avgEnvCQI = data.workBlocks > 0 ? Math.round(data.cqiSum / data.workBlocks) : '--';
+                    
+                    let cqiClass = '';
+                    if (avgEnvCQI !== '--') {
+                        cqiClass = avgEnvCQI >= 85 ? 'cqi-high' : (avgEnvCQI <= 60 ? 'cqi-low' : '');
+                    }
+
+                    envContainer.innerHTML += `
+                        <div class="env-row">
+                            <div class="env-label">${env}</div>
+                            <div class="env-bar-container">
+                                <div class="env-bar-fill" style="width: ${widthPct}%"></div>
+                            </div>
+                            <div class="env-stats">
+                                <span style="opacity:0.7; margin-right: 10px;">${formatDuration(data.timeSec)}</span>
+                                <span class="${cqiClass}">CQI: ${avgEnvCQI}${avgEnvCQI !== '--' ? '%' : ''}</span>
+                            </div>
+                        </div>
+                    `;
+                });
             }
 
-            // 4. Homeostatic Recovery Deficit -> Threshold: 10 Total Blocks
-            const hrdContainer = document.getElementById('container-hrd');
-            if (totalBlocks >= 10) {
-                const requiredRest = totalWorkMins / 5; // 1:5 ratio
-                const deficit = totalRestMins - requiredRest;
-                
-                if (deficit < 0) {
-                    hrdContainer.innerHTML = `<div class="metric-value" style="color: var(--warning);"><span class="math-symbol">μ =</span> ${deficit.toFixed(1)}m</div>`;
-                } else {
-                    hrdContainer.innerHTML = `<div class="metric-value"><span class="math-symbol">μ =</span> +${deficit.toFixed(1)}m</div>`;
-                }
-            } else {
-                hrdContainer.innerHTML = `<div class="awaiting-data">Awaiting Data (n=${totalBlocks}/10 Total)</div>`;
-            }
-
-            // 5. Render Ledger
+            // 3. Render Raw Ledger
             const tbody = document.getElementById('ledger-body');
             tbody.innerHTML = '';
             
-            if (data.length === 0) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem;">No telemetry data available. Initialize a session from the terminal.</td>`;
-                tbody.appendChild(tr);
-            } else {
-                // Reverse data so newest is at the top
-                const displayData = [...data].reverse();
+            // Sort blocks reverse chronologically
+            allBlocks.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+
+            allBlocks.forEach(block => {
+                const date = new Date(block.startTime);
+                const dateStr = `${date.getMonth()+1}/${date.getDate()} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
                 
-                displayData.forEach(d => {
-                    const overflowClass = d.overflow > 0 ? 'cell-overflow' : '';
-                    const overflowText = d.overflow > 0 ? `+${d.overflow}m` : (d.overflow < 0 ? `${d.overflow}m` : '0');
-                    const primedTag = d.primed ? `<span class="tag-primed">PRIMED</span>` : '';
+                const targetMins = block.plannedSec ? Math.floor(block.plannedSec / 60) : '∞';
+                const actualMins = Math.floor(block.durationSec / 60);
+                
+                let status = 'COMPLETED';
+                let statusColor = 'inherit';
+                if (block.plannedSec && block.durationSec < block.plannedSec - 10) { // 10 sec grace period
+                    status = 'ABORTED';
+                    statusColor = 'var(--warning)';
+                } else if (block.plannedSec && block.durationSec > block.plannedSec + 60) {
+                    status = 'OVERFLOW';
+                    statusColor = 'var(--accent)';
+                }
 
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${d.id}</td>
-                        <td>${d.date}</td>
-                        <td>${d.mode} ${primedTag}</td>
-                        <td>${d.target === '∞' ? '∞' : d.target + 'm'}</td>
-                        <td>${d.actual}m</td>
-                        <td class="${overflowClass}">${overflowText}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
+                const isWorkState = ['Work', 'Study', 'Zen Mode'].includes(block.taskName);
+                const ints = block.interruptions || 0;
+                let cqiDisplay = '--';
+                
+                if (isWorkState) {
+                    const blockCQI = calculateCQI(ints);
+                    const colorClass = blockCQI >= 85 ? 'cqi-high' : (blockCQI <= 60 ? 'cqi-low' : '');
+                    cqiDisplay = `<span class="${colorClass}">${blockCQI}%</span> <span style="opacity:0.5; font-size:0.8em;">(${ints} int)</span>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="opacity: 0.7;">${dateStr}</td>
+                        <td><span class="tag-env">${block.environment || 'UNKNOWN'}</span></td>
+                        <td>${block.taskName}</td>
+                        <td>${actualMins}m / ${targetMins}m</td>
+                        <td style="color: ${statusColor}; font-size: 0.75rem;">${status}</td>
+                        <td>${cqiDisplay}</td>
+                    </tr>
+                `;
+            });
         }
 
-        function wipeAllData() {
-            if (confirm("SYSTEM WARNING: This action will permanently purge all local session telemetry. Do you wish to proceed?")) {
+        function clearData() {
+            if(confirm("SYS.WARN: This will permanently delete all local telemetry data. Proceed?")) {
                 localStorage.removeItem('studySessions');
-                window.location.reload();
+                renderDashboard();
             }
         }
 
-        // Initialize: Try to load real data, fallback to empty array if none exists.
-        window.onload = () => {
-            const actualData = parseRealData();
-            renderDashboard(actualData);
-        };
-
+        window.onload = renderDashboard;
     </script>
 </body>
 </html>
