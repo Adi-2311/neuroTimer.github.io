@@ -337,7 +337,7 @@
                 noiseSource.loop = true;
 
                 const gainNode = audioCtx.createGain();
-                gainNode.gain.value = 0.08; 
+                gainNode.gain.value = 0.5; 
 
                 noiseSource.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
@@ -347,7 +347,7 @@
             } else if (mode === 'GAMMA') {
                 // 40Hz Binaural Beats (200Hz Left, 240Hz Right)
                 const gainNode = audioCtx.createGain();
-                gainNode.gain.value = 0.05; // Keep it subtle to prevent headache
+                gainNode.gain.value = 0.5; // Keep it subtle to prevent headache
 
                 oscLeft = audioCtx.createOscillator();
                 oscLeft.type = 'sine';
