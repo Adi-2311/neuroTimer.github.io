@@ -3,28 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Focus Terminal</title>
+    <title>Focus Terminal - Empirical Input</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #F5F5F7;
+            --surface: #FFFFFF;
             --text-primary: #1E3A5F;
+            --text-muted: #6B7C93;
             --accent: #4A9B9B;
             --warning: #D97757;
-            --border-strict: 1px solid #1E3A5F;
+            --border-soft: 1px solid rgba(30, 58, 95, 0.1);
             --font-sans: 'Inter', sans-serif;
             --font-mono: 'Roboto Mono', monospace;
         }
-
-        body.work-mode {
-            background-color: #000000;
-            color: #F5F5F7;
-        }
-        body.work-mode .terminal-container { border-color: #333; }
-        body.work-mode button { border-color: #F5F5F7; color: #F5F5F7; }
-        body.work-mode button:hover { background-color: #F5F5F7; color: #000000; }
-        body.work-mode input, body.work-mode .event-log { border-color: #333; }
-        body.work-mode .log-entry { border-bottom-color: rgba(245, 245, 247, 0.3); }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -33,351 +25,410 @@
             background-color: var(--bg);
             color: var(--text-primary);
             line-height: 1.6;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 1rem;
-        }
-
-        .terminal-container {
-            width: 100%;
-            max-width: 800px;
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 2rem;
             padding: 2rem;
-            border: var(--border-strict);
-            background: transparent;
-        }
-
-        .main-panel { display: flex; flex-direction: column; }
-
-        h1 {
-            font-size: 1rem;
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            border-bottom: var(--border-strict);
-            padding-bottom: 0.5rem;
+            max-width: 900px;
+            margin: 0 auto;
         }
 
         .mono { font-family: var(--font-mono); }
 
-        input[type="text"] {
-            width: 100%;
-            padding: 0.75rem;
-            font-family: var(--font-mono);
-            font-size: 1rem;
-            background: transparent;
-            border: var(--border-strict);
-            color: inherit;
-            margin-bottom: 2rem;
-            outline: none;
+        /* Header */
+        header {
+            display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;
         }
+        h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
+        .nav-link { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color 0.2s ease; }
+        .nav-link:hover { color: var(--accent); }
 
+        /* Main Display */
         .timer-display {
-            font-size: 5rem;
-            font-weight: 400;
-            text-align: center;
-            margin: 2rem 0;
-            letter-spacing: -0.05em;
-            font-variant-numeric: tabular-nums;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: color 0.3s ease;
+            background-color: var(--surface); border-radius: 24px; padding: 3rem 2rem;
+            border: var(--border-soft); text-align: center; margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
         }
+        .time-value { font-family: var(--font-mono); font-size: 5rem; font-weight: 400; color: var(--text-primary); line-height: 1; margin-bottom: 0.5rem; }
+        .time-value.overflow { color: var(--warning); }
+        .time-label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
 
-        .timer-display.overflow {
-            color: var(--warning);
+        /* Control Grid */
+        .bento-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem;
         }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
+        .bento-btn {
+            background-color: var(--surface); border: var(--border-soft); border-radius: 16px;
+            padding: 1.5rem; cursor: pointer; transition: all 0.2s ease; text-align: left;
+            display: flex; flex-direction: column; justify-content: space-between; min-height: 100px;
         }
-        .pulse-text { animation: pulse 2s infinite ease-in-out; }
-
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-
-        button {
-            padding: 0.75rem;
-            font-family: var(--font-sans);
-            font-size: 0.85rem;
-            font-weight: 500;
-            background: transparent;
-            border: var(--border-strict);
-            color: inherit;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            text-transform: uppercase;
-        }
-
-        button:hover {
-            background-color: var(--text-primary);
-            color: var(--bg);
-        }
-
-        .btn-stop {
-            grid-column: 1 / -1;
-            margin-top: 1rem;
-            display: none;
-        }
+        .bento-btn:hover { border-color: var(--accent); background: rgba(74, 155, 155, 0.02); }
+        .bento-btn.active { border-color: var(--warning); background: rgba(217, 119, 87, 0.05); }
         
-        .btn-dynamic {
-            grid-column: 1 / -1;
-            border-style: dashed;
-            display: none;
-        }
+        .btn-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; }
+        .btn-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.3; }
 
-        /* Sidebar Log */
-        .side-panel {
-            border-left: var(--border-strict);
-            padding-left: 2rem;
-            display: flex;
-            flex-direction: column;
+        /* Ledger and Environment Selector */
+        .ledger-section {
+            background-color: var(--surface); border-radius: 24px; padding: 1.5rem;
+            border: var(--border-soft); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
         }
-
-        .event-log {
-            flex-grow: 1;
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            overflow-y: auto;
-            max-height: 400px;
+        .ledger-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;
         }
+        .section-title { font-size: 0.75rem; text-transform: uppercase; font-weight: 600; color: var(--text-muted); letter-spacing: 0.05em; }
 
-        .log-entry {
-            margin-bottom: 0.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px dotted rgba(30, 58, 95, 0.3);
-            word-wrap: break-word;
+        /* Custom Dropdown for ENV_VAR */
+        .env-wrapper { position: relative; font-family: var(--font-mono); font-size: 0.75rem; }
+        .env-trigger {
+            background: var(--bg); border: 1px dashed var(--accent); color: var(--accent);
+            padding: 0.5rem 0.75rem; border-radius: 8px; cursor: pointer; user-select: none;
+            display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;
         }
-
-        .log-time { color: var(--accent); margin-right: 0.5rem;}
-        .sys-msg { color: var(--accent); font-weight: 500; }
-        .warn-msg { color: var(--warning); font-weight: 500; }
-
-        @media (max-width: 768px) {
-            .terminal-container { grid-template-columns: 1fr; }
-            .side-panel { border-left: none; border-top: var(--border-strict); padding-left: 0; padding-top: 2rem; margin-top: 2rem; }
+        .env-trigger:hover { background: rgba(74, 155, 155, 0.1); }
+        .env-dropdown {
+            position: absolute; right: 0; top: calc(100% + 0.5rem); width: 200px;
+            background: var(--surface); border: var(--border-soft); border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; flex-direction: column; z-index: 100;
+            overflow: hidden;
         }
+        .env-dropdown.show { display: flex; }
+        .env-item {
+            padding: 0.75rem 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(30,58,95,0.05); transition: background 0.2s;
+        }
+        .env-item:hover { background: rgba(74, 155, 155, 0.05); color: var(--accent); }
+        .env-divider { height: 1px; background: rgba(30,58,95,0.1); }
+        .env-item.add-btn { color: var(--text-muted); font-style: italic; }
+        .env-item.add-btn:hover { color: var(--text-primary); }
+        .env-delete { color: var(--warning); font-size: 1rem; line-height: 1; padding-left: 0.5rem; opacity: 0.5; }
+        .env-delete:hover { opacity: 1; }
+
+        /* Table */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.85rem; }
+        th, td { padding: 0.75rem 0; text-align: left; border-bottom: 1px solid rgba(30, 58, 95, 0.05); }
+        th { font-family: var(--font-sans); text-transform: uppercase; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+        tr:last-child td { border-bottom: none; }
+        .tag { font-size: 0.7em; border: 1px solid var(--text-muted); padding: 2px 6px; border-radius: 4px; margin-right: 0.5rem; }
+
+        @media (max-width: 600px) { .bento-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-    <div class="terminal-container">
-        
-        <!-- MAIN CONTROLS -->
-        <div class="main-panel">
-            <h1>Active Task</h1>
-            <input type="text" id="task-input" placeholder="Enter task (e.g., Read Chapter 4)">
-            
-            <div id="status-label" class="mono" style="text-align: center; font-size: 0.85rem; color: var(--accent);">IDLE</div>
-            <div class="timer-display mono" id="timer">00:00</div>
-            
-            <div class="controls" id="primary-controls">
-                <button onclick="startStandardTimer('DMN Reset', 600)">DMN Reset (10m)</button>
-                <button onclick="startStandardTimer('Meditation', 300)">Meditate (5m)</button>
-                <button onclick="startStandardTimer('Work', 1500)">Work (25m)</button>
-                <button onclick="startZenMode()">Zen Mode (∞)</button>
-                <button id="dynamic-recovery-btn" class="btn-dynamic" onclick="startCalculatedRecovery()">Initiate Calculated Recovery</button>
-            </div>
-            
-            <button class="btn-stop" id="stop-btn" onclick="stopCurrentBlock()">Conclude Current Block</button>
+    <header>
+        <div>
+            <h1>Focus Terminal</h1>
+            <div class="mono" style="font-size: 0.85rem; color: var(--text-muted);">Empirical Input Module</div>
         </div>
+        <a href="stats.html" class="nav-link">Output Report &rarr;</a>
+    </header>
 
-        <!-- UTILITY LOG -->
-        <div class="side-panel">
-            <h1>Session Log</h1>
-            <div class="event-log" id="event-log">
-                <div class="log-entry">
-                    <span class="log-time">[System]</span> Terminal initialized.
+    <!-- Main Timer Display -->
+    <div class="timer-display" id="timer-display">
+        <div class="time-value" id="time-val">00:00</div>
+        <div class="time-label" id="time-lbl">Awaiting Protocol Initialization</div>
+    </div>
+
+    <!-- Protocol Controls -->
+    <div class="bento-grid">
+        <button class="bento-btn" id="btn-dmn" onclick="startProtocol('DMN Reset', 10)">
+            <div class="btn-title">DMN Reset (10m)</div>
+            <div class="btn-desc">Visual fixation to down-regulate the Default Mode Network. Auto-triggers Work block upon completion.</div>
+        </button>
+        <button class="bento-btn" id="btn-med" onclick="startProtocol('Meditation', 5)">
+            <div class="btn-title">Meditation (5m)</div>
+            <div class="btn-desc">Breath-anchored attention regulation. Auto-triggers Work block upon completion.</div>
+        </button>
+        <button class="bento-btn" id="btn-work" onclick="startProtocol('Work', 25)">
+            <div class="btn-title">Work Block (25m)</div>
+            <div class="btn-desc">Standard high-yield cognitive execution phase.</div>
+        </button>
+        <button class="bento-btn" id="btn-zen" onclick="startProtocol('Zen Mode', null)">
+            <div class="btn-title">Zen Mode (∞)</div>
+            <div class="btn-desc">Temporal blindness. Time is hidden to prevent clock-watching anxiety.</div>
+        </button>
+    </div>
+    
+    <!-- Ledger Container with ENV_VAR integration -->
+    <div class="ledger-section">
+        <div class="ledger-header">
+            <div class="section-title">Local Session Ledger</div>
+            
+            <!-- Custom Environment Dropdown -->
+            <div class="env-wrapper">
+                <div class="env-trigger" onclick="toggleEnvMenu(event)">
+                    <span id="current-env-display">ENV_VAR: Home</span>
+                    <span>▾</span>
+                </div>
+                <div class="env-dropdown" id="env-dropdown">
+                    <!-- Populated by JS -->
                 </div>
             </div>
-            <a href="stats.html" class="mono" style="font-size: 0.75rem; text-decoration: none; color: inherit; margin-top: 1rem; border: var(--border-strict); padding: 0.5rem; text-align: center;">View Full Stats &rarr;</a>
         </div>
 
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Env</th>
+                        <th>Protocol</th>
+                        <th>Target</th>
+                        <th>Actual</th>
+                    </tr>
+                </thead>
+                <tbody id="ledger-body">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
-        let intervalTracker;
-        let activeState = '';
-        let isZenMode = false;
-        
+        // --- ENVIRONMENT VARIABLE LOGIC ---
+        const DEFAULT_ENVS = ['Home', 'School', 'Work', 'Library'];
+        let customEnvs = JSON.parse(localStorage.getItem('customEnvs')) || [];
+        let currentEnv = localStorage.getItem('currentEnv') || 'Home';
+
+        function initEnvMenu() {
+            document.getElementById('current-env-display').innerText = `ENV_VAR: ${currentEnv}`;
+            renderEnvDropdown();
+        }
+
+        function toggleEnvMenu(event) {
+            event.stopPropagation();
+            document.getElementById('env-dropdown').classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.env-wrapper')) {
+                document.getElementById('env-dropdown').classList.remove('show');
+            }
+        });
+
+        function selectEnv(env) {
+            currentEnv = env;
+            localStorage.setItem('currentEnv', env);
+            document.getElementById('current-env-display').innerText = `ENV_VAR: ${env}`;
+            document.getElementById('env-dropdown').classList.remove('show');
+        }
+
+        function addCustomEnv(event) {
+            event.stopPropagation();
+            if (customEnvs.length >= 3) {
+                alert("Terminal limit reached: Maximum 3 custom variables.");
+                return;
+            }
+            let newTag = prompt("Enter new environment variable (max 12 characters):");
+            if (newTag) {
+                newTag = newTag.trim().substring(0, 12).toUpperCase(); // Force uppercase for terminal aesthetic
+                if (newTag && !DEFAULT_ENVS.includes(newTag) && !customEnvs.includes(newTag)) {
+                    customEnvs.push(newTag);
+                    localStorage.setItem('customEnvs', JSON.stringify(customEnvs));
+                    selectEnv(newTag);
+                    renderEnvDropdown();
+                }
+            }
+        }
+
+        function deleteCustomEnv(env, event) {
+            event.stopPropagation();
+            customEnvs = customEnvs.filter(e => e !== env);
+            localStorage.setItem('customEnvs', JSON.stringify(customEnvs));
+            if (currentEnv === env) {
+                selectEnv('Home'); // Fallback if current tag is deleted
+            }
+            renderEnvDropdown();
+        }
+
+        function renderEnvDropdown() {
+            const dropdown = document.getElementById('env-dropdown');
+            dropdown.innerHTML = '';
+            
+            // Render Defaults
+            DEFAULT_ENVS.forEach(env => {
+                dropdown.innerHTML += `<div class="env-item" onclick="selectEnv('${env}')">${env}</div>`;
+            });
+
+            dropdown.innerHTML += `<div class="env-divider"></div>`;
+
+            // Render Customs
+            customEnvs.forEach(env => {
+                dropdown.innerHTML += `
+                    <div class="env-item">
+                        <span onclick="selectEnv('${env}')" style="flex-grow: 1;">${env}</span>
+                        <span class="env-delete" onclick="deleteCustomEnv('${env}', event)">×</span>
+                    </div>
+                `;
+            });
+
+            // Render Add Button (if room)
+            if (customEnvs.length < 3) {
+                dropdown.innerHTML += `<div class="env-item add-btn" onclick="addCustomEnv(event)">+ Add Custom [${3 - customEnvs.length} left]</div>`;
+            }
+        }
+
+        // --- TIMER & PROTOCOL LOGIC ---
+        let timerInterval;
+        let secondsElapsed = 0;
         let targetSeconds = 0;
-        let elapsedSeconds = 0;
+        let currentMode = null;
         let isOverflowing = false;
-        let pendingRecoverySeconds = 0;
-
-        function formatTime() {
-            const now = new Date();
-            return `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}]`;
-        }
         
-        function formatDuration(totalSeconds) {
-            const m = Math.floor(Math.abs(totalSeconds) / 60);
-            const s = Math.abs(totalSeconds) % 60;
-            return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+        // Sessions array strictly tracks actual output
+        let studySessions = JSON.parse(localStorage.getItem('studySessions')) || [];
+
+        function formatTime(totalSeconds, hideIfZen = false) {
+            if (hideIfZen && !isOverflowing) return "[ - - - ]";
+            
+            const isNegative = totalSeconds < 0;
+            const absSec = Math.abs(totalSeconds);
+            const m = Math.floor(absSec / 60).toString().padStart(2, '0');
+            const s = (absSec % 60).toString().padStart(2, '0');
+            return isNegative ? `+${m}:${s}` : `${m}:${s}`;
         }
 
-        function appendLog(message, type = 'normal') {
-            const logBox = document.getElementById('event-log');
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
+        function updateDisplay() {
+            const displayObj = document.getElementById('time-val');
+            const labelObj = document.getElementById('time-lbl');
             
-            let msgClass = '';
-            if (type === 'system') msgClass = 'sys-msg';
-            if (type === 'warning') msgClass = 'warn-msg';
+            let timeRemaining = targetSeconds ? targetSeconds - secondsElapsed : secondsElapsed;
             
-            entry.innerHTML = `<span class="log-time">${formatTime()}</span> <span class="${msgClass}">${message}</span>`;
-            logBox.prepend(entry);
-        }
-
-        function triggerUIMode(modeName, hideTime = false) {
-            const task = document.getElementById('task-input').value || 'Unspecified target';
-            document.getElementById('status-label').innerText = `${modeName.toUpperCase()} ACTIVE`;
-            
-            document.getElementById('primary-controls').style.display = 'none';
-            document.getElementById('dynamic-recovery-btn').style.display = 'none';
-            document.getElementById('stop-btn').style.display = 'block';
-
-            if (modeName === 'Work' || modeName === 'Zen Mode') {
-                document.body.classList.add('work-mode');
+            if (targetSeconds && timeRemaining < 0) {
+                isOverflowing = true;
+                displayObj.classList.add('overflow');
+                labelObj.innerText = `OVERFLOW AUDIT REQUIRED. CLICK TO TERMINATE AND LOG.`;
+                displayObj.innerText = formatTime(timeRemaining);
             } else {
-                document.body.classList.remove('work-mode');
-            }
-
-            // Only log task target if it's a new chain, otherwise just log the mode
-            if (task !== 'Unspecified target') {
-                appendLog(`Started: ${modeName} -> ${task}`);
-            } else {
-                appendLog(`Started: ${modeName}`);
-            }
-
-            if (hideTime) {
-                const display = document.getElementById('timer');
-                display.innerText = "[ - - - ]";
-                display.classList.add('pulse-text');
+                isOverflowing = false;
+                displayObj.classList.remove('overflow');
+                labelObj.innerText = `PROTOCOL: ${currentMode} | CLICK TO TERMINATE`;
+                displayObj.innerText = formatTime(timeRemaining, currentMode === 'Zen Mode');
             }
         }
 
-        function startStandardTimer(mode, seconds) {
-            clearInterval(intervalTracker);
-            activeState = mode;
-            isZenMode = false;
-            targetSeconds = seconds;
-            elapsedSeconds = 0;
+        function startProtocol(mode, minutes) {
+            // If clicking a running protocol, stop it.
+            if (currentMode !== null) {
+                stopAndLogProtocol();
+                return;
+            }
+
+            currentMode = mode;
+            targetSeconds = minutes ? minutes * 60 : null;
+            secondsElapsed = 0;
             isOverflowing = false;
             
-            triggerUIMode(mode, false);
-            const display = document.getElementById('timer');
-            display.classList.remove('pulse-text', 'overflow');
-            
-            intervalTracker = setInterval(() => {
-                elapsedSeconds++;
-                const remaining = targetSeconds - elapsedSeconds;
-                
-                if (remaining > 0) {
-                    display.innerText = formatDuration(remaining);
-                } else if (remaining === 0) {
-                    display.innerText = "00:00";
-                    
-                    // AUTO-TRANSITION LOGIC FOR PRIMING PHASES
-                    if (activeState === 'DMN Reset' || activeState === 'Meditation') {
-                        clearInterval(intervalTracker);
-                        appendLog(`Priming complete. Auto-initiating Work sequence.`, 'system');
-                        startStandardTimer('Work', 1500); // Trigger 25-minute Work Block
-                        return;
-                    }
+            // Visual feedback
+            document.querySelectorAll('.bento-btn').forEach(btn => btn.style.opacity = '0.5');
+            document.getElementById(mode === 'DMN Reset' ? 'btn-dmn' : 
+                                  mode === 'Meditation' ? 'btn-med' : 
+                                  mode === 'Zen Mode' ? 'btn-zen' : 'btn-work').style.opacity = '1';
+            document.getElementById(mode === 'DMN Reset' ? 'btn-dmn' : 
+                                  mode === 'Meditation' ? 'btn-med' : 
+                                  mode === 'Zen Mode' ? 'btn-zen' : 'btn-work').classList.add('active');
 
-                } else {
-                    // OVERFLOW LOGIC FOR WORK AND RECOVERY PHASES
-                    if (!isOverflowing) {
-                        isOverflowing = true;
-                        appendLog(`Target duration reached. Overflow tracking initiated.`, 'warning');
-                        document.getElementById('status-label').innerText = `${activeState.toUpperCase()} - OVERFLOW`;
-                        display.classList.add('overflow');
-                    }
-                    display.innerText = `+${formatDuration(Math.abs(remaining))}`;
-                }
+            // Set up click-to-stop on the display
+            document.getElementById('timer-display').style.cursor = 'pointer';
+            document.getElementById('timer-display').onclick = stopAndLogProtocol;
+
+            updateDisplay();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                updateDisplay();
             }, 1000);
         }
 
-        function startZenMode() {
-            clearInterval(intervalTracker);
-            activeState = 'Zen Mode';
-            isZenMode = true;
-            elapsedSeconds = 0;
+        function stopAndLogProtocol() {
+            clearInterval(timerInterval);
             
-            triggerUIMode('Zen Mode', true);
+            // Prevent logging accidental double-clicks (< 5 seconds)
+            if (secondsElapsed > 5) {
+                logSession();
+            }
 
-            intervalTracker = setInterval(() => {
-                elapsedSeconds++;
-            }, 1000);
-        }
-        
-        function startCalculatedRecovery() {
-            startStandardTimer('Recovery', pendingRecoverySeconds);
-        }
-
-        function stopCurrentBlock() {
-            clearInterval(intervalTracker);
-
-            if (isZenMode) {
-                const m = Math.floor(elapsedSeconds / 60);
-                const s = elapsedSeconds % 60;
-                appendLog(`Concluded: Zen Mode (Duration: ${m}m ${s}s)`);
-                
-                pendingRecoverySeconds = Math.floor(elapsedSeconds / 5);
-                const r_m = Math.floor(pendingRecoverySeconds / 60);
-                const r_s = pendingRecoverySeconds % 60;
-                
-                appendLog(`Calculation: Required recovery period is ${r_m}m ${r_s}s.`, 'system');
-                
-            } else {
-                if (isOverflowing) {
-                    const over_m = Math.floor(Math.abs(targetSeconds - elapsedSeconds) / 60);
-                    const over_s = Math.abs(targetSeconds - elapsedSeconds) % 60;
-                    appendLog(`Concluded: ${activeState} (Includes ${over_m}m ${over_s}s overflow)`, 'warning');
-                } else {
-                    appendLog(`Concluded: ${activeState}`);
+            // Auto-chain logic: If finishing a priming sequence, trigger Work block.
+            let nextMode = null;
+            if (currentMode === 'DMN Reset' || currentMode === 'Meditation') {
+                if (!isOverflowing && secondsElapsed >= (targetSeconds - 5)) {
+                    nextMode = 'Work';
                 }
             }
 
             resetUI();
+
+            if (nextMode) {
+                setTimeout(() => startProtocol(nextMode, 25), 500);
+            }
+        }
+
+        function logSession() {
+            // Find or create today's session wrapper
+            let sessionObj = {
+                blocks: [{
+                    blockId: Date.now(),
+                    startTime: new Date().toISOString(),
+                    taskName: currentMode,
+                    environment: currentEnv, // <--- ENVIRONMENT DATA INJECTED HERE
+                    plannedSec: targetSeconds,
+                    durationSec: secondsElapsed
+                }]
+            };
+            
+            studySessions.push(sessionObj);
+            localStorage.setItem('studySessions', JSON.stringify(studySessions));
+            renderLedger();
         }
 
         function resetUI() {
-            document.getElementById('timer').innerText = "00:00";
-            document.getElementById('timer').classList.remove('pulse-text', 'overflow');
-            document.getElementById('status-label').innerText = "IDLE";
-            
-            document.getElementById('primary-controls').style.display = 'grid';
-            document.getElementById('stop-btn').style.display = 'none';
-            document.body.classList.remove('work-mode');
-            
-            if (isZenMode && pendingRecoverySeconds > 0) {
-                const btn = document.getElementById('dynamic-recovery-btn');
-                const m = Math.floor(pendingRecoverySeconds / 60);
-                const s = pendingRecoverySeconds % 60;
-                btn.innerText = `Initiate Calculated Recovery (${m}m ${s}s)`;
-                btn.style.display = 'block';
-            } else {
-                document.getElementById('dynamic-recovery-btn').style.display = 'none';
-            }
-            
-            activeState = '';
-            isZenMode = false;
+            currentMode = null;
+            targetSeconds = 0;
+            secondsElapsed = 0;
             isOverflowing = false;
+            document.getElementById('timer-display').style.cursor = 'default';
+            document.getElementById('timer-display').onclick = null;
+            document.getElementById('time-val').classList.remove('overflow');
+            document.getElementById('time-val').innerText = "00:00";
+            document.getElementById('time-lbl').innerText = "Awaiting Protocol Initialization";
+            
+            document.querySelectorAll('.bento-btn').forEach(btn => {
+                btn.style.opacity = '1';
+                btn.classList.remove('active');
+            });
         }
+
+        function renderLedger() {
+            const tbody = document.getElementById('ledger-body');
+            tbody.innerHTML = '';
+            
+            let allBlocks = [];
+            studySessions.forEach(session => {
+                if (session.blocks) allBlocks.push(...session.blocks);
+            });
+
+            // Show newest top
+            allBlocks.reverse().forEach(block => {
+                const targetMins = block.plannedSec ? Math.floor(block.plannedSec / 60) : '∞';
+                const actualMins = Math.floor(block.durationSec / 60);
+                const env = block.environment || 'N/A'; // Support older data
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="tag">${env}</span></td>
+                        <td>${block.taskName}</td>
+                        <td>${targetMins}m</td>
+                        <td>${actualMins}m</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Initialize App
+        window.onload = () => {
+            initEnvMenu();
+            renderLedger();
+        };
+
     </script>
 </body>
 </html>
